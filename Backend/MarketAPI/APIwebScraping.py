@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import json
 import time
 import requests
@@ -255,6 +256,9 @@ def script(state, commodity, district):
 
 app = Flask(__name__)
 
+# Enable CORS for all domains on all routes
+CORS(app, origins=['http://localhost:3000', 'http://127.0.0.1:3000'])
+
 # Simple in-memory cache
 cache = {}
 CACHE_DURATION = 300  # 5 minutes
@@ -264,14 +268,24 @@ def homePage():
     dataSet = {"Page": "Home Page navigate to request page", "Time Stamp": time.time()}
     return jsonify(dataSet)
 
-@app.route('/request', methods=['GET'])
+@app.route('/request', methods=['GET', 'OPTIONS'])
 def requestPage():
+    # Handle preflight requests
+    if request.method == 'OPTIONS':
+        response = jsonify({'message': 'CORS preflight'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response
+    
     commodityQuery = request.args.get('commodity')
     stateQuery = request.args.get('state')
     districtQuery = request.args.get('district')
 
     if not commodityQuery or not stateQuery or not districtQuery:
-        return jsonify({"error": "Missing query parameters"})
+        response = jsonify({"error": "Missing query parameters"})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
     # Create cache key
     cache_key = hashlib.md5(f"{commodityQuery}_{stateQuery}_{districtQuery}".encode()).hexdigest()
@@ -280,18 +294,23 @@ def requestPage():
     if cache_key in cache:
         cached_data, timestamp = cache[cache_key]
         if time.time() - timestamp < CACHE_DURATION:
-            return cached_data
+            response = jsonify(cached_data)
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            return response
 
     try:
         result = script(stateQuery, commodityQuery, districtQuery)
-        json_data = json.dumps(result, indent=4)
         
         # Store in cache
-        cache[cache_key] = (json_data, time.time())
+        cache[cache_key] = (result, time.time())
         
-        return json_data
+        response = jsonify(result)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
     except Exception as e:
-        return jsonify({"error": str(e)})
+        response = jsonify({"error": str(e)})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
 if __name__ == '__main__':
     import os

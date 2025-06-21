@@ -2,8 +2,8 @@ export interface MarketPrice {
   commodity: string;
   market: string;
   price: number;
-  minPrice?: number;
-  maxPrice?: number;
+  minPrice: number;
+  maxPrice: number;
   unit: string;
   date: string;
   districtFound?: boolean;
