@@ -33,6 +33,7 @@ const ChatInterface: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(null);
 
   useEffect(() => {
     // Get user location
@@ -52,7 +53,7 @@ const ChatInterface: React.FC = () => {
       setUserLocation("Delhi, India"); // Default location
     }
 
-    // Initialize speech recognition for input only
+    // Initialize speech recognition
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -65,6 +66,8 @@ const ChatInterface: React.FC = () => {
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         setInputText(transcript);
+        // Auto-send voice messages
+        handleSendMessage(transcript);
       };
 
       recognitionRef.current.onend = () => {
@@ -76,6 +79,9 @@ const ChatInterface: React.FC = () => {
         setIsListening(false);
       };
     }
+
+    // Initialize speech synthesis
+    synthRef.current = window.speechSynthesis;
 
     return () => {
       if (recognitionRef.current) {
@@ -99,6 +105,23 @@ const ChatInterface: React.FC = () => {
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
+    }
+  };
+
+  const speakText = (text: string) => {
+    if (synthRef.current) {
+      // Stop any current speech
+      synthRef.current.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = selectedLanguage === "hi" ? "hi-IN" : "en-US";
+      utterance.rate = 0.9;
+      utterance.volume = 0.8;
+
+      // Add a small delay to ensure speech synthesis is ready
+      setTimeout(() => {
+        synthRef.current?.speak(utterance);
+      }, 100);
     }
   };
 
@@ -162,6 +185,11 @@ const ChatInterface: React.FC = () => {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Speak the response (only if it was a voice input)
+      if (messageText && recognitionRef.current) {
+        speakText(data.response);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       const errorMessage: ChatMessage = {
@@ -171,6 +199,13 @@ const ChatInterface: React.FC = () => {
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
+
+      // Speak error message if it was a voice input
+      if (messageText && recognitionRef.current) {
+        speakText(
+          "I'm sorry, I encountered a technical issue. Please try again in a moment."
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -275,6 +310,16 @@ const ChatInterface: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-6">
+            {/* Language Selector */}
+            <select
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+              className="px-3 py-2 bg-white/80 border border-yellow-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300"
+            >
+              <option value="en">English</option>
+              <option value="hi">हिंदी</option>
+            </select>
+
             <Link
               href="/"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
@@ -325,7 +370,7 @@ const ChatInterface: React.FC = () => {
                   <p className="text-lg text-gray-600 max-w-2xl">
                     I'm your AI assistant for farming advice, weather updates,
                     and government schemes. Ask me anything about agriculture,
-                    health, or rural development.
+                    health, or rural development. You can type or use voice!
                   </p>
                 </div>
 
@@ -421,7 +466,7 @@ const ChatInterface: React.FC = () => {
                 onKeyPress={(e) =>
                   e.key === "Enter" && !e.shiftKey && handleSendMessage()
                 }
-                placeholder="Ask me about farming, weather, or government schemes..."
+                placeholder="Ask me about farming, weather, or government schemes... (type or use voice)"
                 className="flex-1 px-4 py-3 bg-transparent border-none focus:outline-none text-gray-800 placeholder-gray-500"
                 disabled={isLoading}
               />
@@ -430,9 +475,10 @@ const ChatInterface: React.FC = () => {
                 onClick={isListening ? stopListening : startListening}
                 className={`p-3 rounded-full transition-all duration-200 ${
                   isListening
-                    ? "bg-red-500 hover:bg-red-600 text-white"
+                    ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-600"
                 }`}
+                title={isListening ? "Stop listening" : "Start voice input"}
               >
                 <Mic className="w-5 h-5" />
               </button>
@@ -440,12 +486,21 @@ const ChatInterface: React.FC = () => {
               <button
                 onClick={() => handleSendMessage()}
                 disabled={isLoading || !inputText.trim()}
-                className="px-6 py-3 bg-yellow-300 text-gray-800 rounded-full hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                className="px-6 py-3 bg-yellow-300 text-gray-800 rounded-full hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
               >
                 <Send className="w-4 h-4" />
                 <span className="font-medium">Send</span>
               </button>
             </div>
+
+            {/* Voice indicator */}
+            {isListening && (
+              <div className="mt-2 text-center">
+                <span className="text-sm text-red-600 animate-pulse">
+                  🎤 Listening... Speak now
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

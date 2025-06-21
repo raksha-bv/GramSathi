@@ -676,51 +676,144 @@ Please provide a helpful response about market prices with practical advice for 
   private detectWeatherIntent(message: string): WeatherIntent {
     const messageLower = message.toLowerCase();
 
-    // Current weather keywords
+    // Enhanced weather keywords - include more variations
     if (
-      messageLower.includes("current weather") ||
-      messageLower.includes("weather now") ||
-      messageLower.includes("weather today") ||
-      messageLower.includes("what is the weather") ||
-      messageLower.includes("how is the weather")
+      messageLower.includes("weather") ||
+      messageLower.includes("temperature") ||
+      messageLower.includes("climate") ||
+      messageLower.includes("rain") ||
+      messageLower.includes("humidity") ||
+      messageLower.includes("wind")
     ) {
-      return { type: "current" };
-    }
+      // Check for current weather keywords
+      if (
+        messageLower.includes("current") ||
+        messageLower.includes("now") ||
+        messageLower.includes("today") ||
+        messageLower.includes("right now") ||
+        messageLower.includes("what is the weather") ||
+        messageLower.includes("how is the weather")
+      ) {
+        // Extract location from the message
+        const location = this.extractWeatherLocation(message);
+        return { type: "current", location };
+      }
 
-    // Forecast keywords
-    if (
-      messageLower.includes("forecast") ||
-      messageLower.includes("weather tomorrow") ||
-      messageLower.includes("next week") ||
-      messageLower.includes("coming days")
-    ) {
-      const days = this.extractDays(message);
-      return { type: "forecast", days };
-    }
+      // Forecast keywords
+      if (
+        messageLower.includes("forecast") ||
+        messageLower.includes("tomorrow") ||
+        messageLower.includes("next week") ||
+        messageLower.includes("coming days")
+      ) {
+        const days = this.extractDays(message);
+        const location = this.extractWeatherLocation(message);
+        return { type: "forecast", days, location };
+      }
 
-    // Alerts keywords
-    if (
-      messageLower.includes("alerts") ||
-      messageLower.includes("warnings") ||
-      messageLower.includes("weather alert")
-    ) {
-      return { type: "alerts" };
+      // Alerts keywords
+      if (
+        messageLower.includes("alerts") ||
+        messageLower.includes("warnings") ||
+        messageLower.includes("weather alert")
+      ) {
+        const location = this.extractWeatherLocation(message);
+        return { type: "alerts", location };
+      }
+
+      // Default to current weather if weather keyword found but no specific type
+      const location = this.extractWeatherLocation(message);
+      return { type: "current", location };
     }
 
     return { type: "none" };
   }
 
-  private extractDays(message: string): number {
-    const match = message.match(/(\d+)\s*days?/i);
-    if (match) {
-      const days = parseInt(match[1]);
-      return Math.min(Math.max(days, 1), 7); // Limit between 1-7 days
+  // Add this new method to extract location from weather queries
+  private extractWeatherLocation(message: string): string | undefined {
+    const messageLower = message.toLowerCase();
+
+    // Common Indian cities/locations
+    const locations = [
+      "bangalore",
+      "bengaluru",
+      "delhi",
+      "mumbai",
+      "chennai",
+      "kolkata",
+      "hyderabad",
+      "pune",
+      "kolar",
+      "mysore",
+      "mangalore",
+      "hubli",
+      "dharwad",
+      "belgaum",
+      "gulbarga",
+      "bijapur",
+      "shimoga",
+      "tumkur",
+      "hassan",
+      "davangere",
+      "bellary",
+      "raichur",
+      "bidar",
+      "bagalkot",
+    ];
+
+    for (const location of locations) {
+      if (messageLower.includes(location)) {
+        // Capitalize first letter
+        return location.charAt(0).toUpperCase() + location.slice(1);
+      }
     }
-    return 7; // Default to 7 days
+
+    return undefined;
   }
 
-  private async fetchWeatherData(intent: WeatherIntent, location?: string) {
-    const targetLocation = location || "Delhi,India";
+  private extractDays(message: string): number | undefined {
+    const messageLower = message.toLowerCase();
+
+    // Look for specific number of days
+    const dayPattern = /(\d+)\s*days?/i;
+    const match = message.match(dayPattern);
+
+    if (match) {
+      const days = parseInt(match[1]);
+      // Limit to reasonable range (1-14 days)
+      return Math.min(Math.max(days, 1), 14);
+    }
+
+    // Default mappings for common phrases
+    if (messageLower.includes("tomorrow")) {
+      return 1;
+    } else if (
+      messageLower.includes("next week") ||
+      messageLower.includes("week")
+    ) {
+      return 7;
+    } else if (
+      messageLower.includes("3 days") ||
+      messageLower.includes("three days")
+    ) {
+      return 3;
+    } else if (
+      messageLower.includes("5 days") ||
+      messageLower.includes("five days")
+    ) {
+      return 5;
+    }
+
+    // Default to 7 days for forecast
+    return 7;
+  }
+
+  private async fetchWeatherData(
+    intent: WeatherIntent,
+    defaultLocation?: string
+  ) {
+    // Use the location from intent first, then defaultLocation, then fallback
+    const targetLocation = intent.location || defaultLocation || "Delhi,India";
 
     switch (intent.type) {
       case "current":
@@ -744,7 +837,7 @@ Please provide a helpful response about market prices with practical advice for 
     switch (intent.type) {
       case "current":
         if (weatherData && weatherData.current) {
-          weatherContext = `Current weather: ${weatherData.current.temp_c}°C, ${weatherData.current.condition.text}, humidity ${weatherData.current.humidity}% in ${weatherData.location.name}. `;
+          weatherContext = `Current weather in ${weatherData.location.name}: ${weatherData.current.temp_c}°C, ${weatherData.current.condition.text}, humidity ${weatherData.current.humidity}%, wind ${weatherData.current.wind_kph} km/h. `;
         }
         break;
 
@@ -755,7 +848,7 @@ Please provide a helpful response about market prices with practical advice for 
           weatherData.forecast.forecastday[0]
         ) {
           const forecast = weatherData.forecast.forecastday[0];
-          weatherContext = `Today's forecast: ${forecast.day.condition.text}, high ${forecast.day.maxtemp_c}°C, low ${forecast.day.mintemp_c}°C, rain chance ${forecast.day.daily_chance_of_rain}%. `;
+          weatherContext = `Weather forecast for ${weatherData.location.name}: ${forecast.day.condition.text}, high ${forecast.day.maxtemp_c}°C, low ${forecast.day.mintemp_c}°C, rain chance ${forecast.day.daily_chance_of_rain}%, humidity ${forecast.day.avghumidity}%. `;
         }
         break;
 
@@ -775,7 +868,7 @@ Please provide a helpful response about market prices with practical advice for 
     
 Weather information: ${weatherContext}
 
-Please provide a helpful response about the weather with practical farming advice. Be concise and focus on actionable recommendations for farmers.`;
+Please provide a helpful response about the weather with practical farming advice. Focus on which crops are suitable for these weather conditions and any farming recommendations. Be concise and actionable for farmers.`;
 
     return await this.sarvamAI.farmingChat(prompt, weatherData);
   }
@@ -995,19 +1088,19 @@ Please provide a helpful response about the weather with practical farming advic
   private extractAppointmentDateTime(message: string): string | undefined {
     const messageLower = message.toLowerCase();
 
-    // Pattern for "20 June at 11:06 PM" or "June 20 at 11:06 PM"
+    // Pattern for "22nd June at 1:20 AM" or "June 22nd at 1:20 AM"
     const dayMonthTimePattern =
-      /(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+at\s+(\d{1,2}):(\d{2})\s*(am|pm)/i;
+      /(\d{1,2})(st|nd|rd|th)?\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+at\s+(\d{1,2}):(\d{2})\s*(am|pm)/i;
     const monthDayTimePattern =
-      /(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})\s+at\s+(\d{1,2}):(\d{2})\s*(am|pm)/i;
+      /(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(st|nd|rd|th)?\s+at\s+(\d{1,2}):(\d{2})\s*(am|pm)/i;
 
     let match = message.match(dayMonthTimePattern);
     if (match) {
       const day = match[1];
-      const month = match[2];
-      const hour = match[3];
-      const minute = match[4];
-      const period = match[5];
+      const month = match[3];
+      const hour = match[4];
+      const minute = match[5];
+      const period = match[6];
 
       const currentYear = new Date().getFullYear();
       const monthNumber = this.getMonthNumber(month);
@@ -1027,14 +1120,13 @@ Please provide a helpful response about the weather with practical farming advic
         .padStart(2, "0")}:${minute}`;
     }
 
-    // Try the original pattern "june 20 at 10:40 PM"
     match = message.match(monthDayTimePattern);
     if (match) {
       const month = match[1];
       const day = match[2];
-      const hour = match[3];
-      const minute = match[4];
-      const period = match[5];
+      const hour = match[4];
+      const minute = match[5];
+      const period = match[6];
 
       const currentYear = new Date().getFullYear();
       const monthNumber = this.getMonthNumber(month);
