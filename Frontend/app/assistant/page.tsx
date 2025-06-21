@@ -1,8 +1,15 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Bot, Home, MessageCircle, User, BarChart3 } from "lucide-react";
-import Link from "next/link";
+import {
+  Bot,
+  Home,
+  MessageCircle,
+  User,
+  BarChart3,
+  Mic,
+  MicOff,
+} from "lucide-react";
 
 const PremiumVoiceAssistant: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -172,7 +179,7 @@ const PremiumVoiceAssistant: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-green-50 flex flex-col">
-      {/* Navigation Header */}
+      {/* Navigation Header - Consistent with chat page */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-yellow-200 p-4 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -186,217 +193,238 @@ const PremiumVoiceAssistant: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <Link
+            <a
               href="/"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              <Home className="w-5 h-5" />
+              
               Home
-            </Link>
-            <Link
+            </a>
+            <a
               href="/chat"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              <MessageCircle className="w-5 h-5" />
-              Chat AI
-            </Link>
-            <Link
+              
+              Chat
+            </a>
+            <a
               href="/dashboard"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              <BarChart3 className="w-5 h-5" />
+              
               Dashboard
-            </Link>
-            <Link
+            </a>
+            <a
               href="/profile"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              <User className="w-5 h-5" />
+              
               Profile
-            </Link>
-            <Link
+            </a>
+            <a
               href="/login"
               className="bg-yellow-200 hover:bg-yellow-300 px-6 py-2 rounded-full text-gray-900 font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300"
             >
               Log in
-            </Link>
+            </a>
           </div>
         </div>
       </div>
 
       {/* Main Voice Assistant Content */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        {/* Background animated particles */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-yellow-200/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-200/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
+      <div className="flex-1 overflow-hidden mt-10">
+        <div className="h-full max-w-6xl mx-auto p-4 flex flex-col items-center justify-center">
+          {/* Subtle background elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-yellow-200/10 rounded-full blur-2xl"></div>
+            <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-green-200/10 rounded-full blur-2xl"></div>
+          </div>
 
-        <div className="relative z-10 max-w-2xl w-full">
-          {/* Main container */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-lg border border-yellow-200">
-            {/* Header */}
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-light text-gray-900 mb-4 tracking-wide">
-                Voice Assistant
-              </h2>
-              <div className="h-0.5 w-24 bg-gradient-to-r from-yellow-300 to-green-300 mx-auto rounded-full"></div>
-            </div>
+          <div className="relative z-10 max-w-2xl w-full">
+            {/* Main container */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-yellow-200">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Voice Assistant
+                </h2>
+                <div className="h-px w-20 bg-gradient-to-r from-yellow-300 to-green-300 mx-auto"></div>
+              </div>
 
-            {/* Status Display */}
-            <div className="text-center mb-12">
-              <div className="relative inline-block">
-                <h3 className="text-2xl font-light text-gray-800 mb-6">
+              {/* Status Display */}
+              <div className="text-center mb-12">
+                <h3 className="text-xl font-medium text-gray-800 mb-8">
                   {getStatusText()}
                 </h3>
 
-                {/* Status Animation */}
-                {isListening && (
-                  <div className="flex justify-center items-center space-x-2 mb-8">
-                    <div className="flex space-x-1">
+                {/* Enhanced Status Animations */}
+                <div className="flex justify-center items-center mb-8 h-16">
+                  {isListening && (
+                    <div className="flex items-center space-x-2">
+                      {[...Array(4)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-2 h-8 bg-gradient-to-t from-red-400 to-red-500 rounded-full transform-gpu"
+                          style={{
+                            animation: `waveform 1.5s ease-in-out infinite`,
+                            animationDelay: `${i * 0.2}s`,
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  )}
+
+                  {(isProcessing && !isSpeaking) && (
+                    <div className="relative">
+                      <div className="w-12 h-12 border-3 border-yellow-200 rounded-full"></div>
+                      <div className="absolute inset-0 w-12 h-12 border-3 border-transparent border-t-yellow-400 rounded-full animate-spin"></div>
+                      <div
+                        className="absolute inset-2 w-8 h-8 border-2 border-transparent border-t-yellow-300 rounded-full animate-spin animate-reverse"
+                        style={{ animationDuration: "0.8s" }}
+                      ></div>
+                    </div>
+                  )}
+
+                  {(isSpeaking && !isProcessing) && (
+                    <div className="flex items-center space-x-1">
                       {[...Array(5)].map((_, i) => (
                         <div
                           key={i}
-                          className="w-1 bg-gradient-to-t from-yellow-400 to-green-400 rounded-full animate-pulse"
+                          className="w-1.5 bg-gradient-to-t from-green-400 to-green-500 rounded-full transform-gpu"
                           style={{
-                            height: "20px",
-                            animationDelay: `${i * 0.1}s`,
-                            animationDuration: "1s",
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {isProcessing && (
-                  <div className="flex justify-center mb-8">
-                    <div className="relative">
-                      <div className="w-12 h-12 border-4 border-gray-200 rounded-full"></div>
-                      <div className="absolute top-0 left-0 w-12 h-12 border-4 border-transparent border-t-yellow-400 rounded-full animate-spin"></div>
-                    </div>
-                  </div>
-                )}
-
-                {isSpeaking && (
-                  <div className="flex justify-center items-center mb-8">
-                    <div className="flex space-x-1">
-                      {[...Array(7)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="w-1 bg-gradient-to-t from-green-400 to-yellow-400 rounded-full"
-                          style={{
-                            height: `${Math.random() * 30 + 10}px`,
-                            animation: `pulse 0.${
-                              Math.random() * 5 + 5
-                            }s ease-in-out infinite alternate`,
+                            height: `${
+                              20 + Math.sin(Date.now() / 200 + i) * 10
+                            }px`,
+                            animation: `speaking 0.6s ease-in-out infinite`,
                             animationDelay: `${i * 0.1}s`,
                           }}
                         ></div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {!isListening && !isProcessing && !isSpeaking && (
-                  <div className="mb-8">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mx-auto animate-pulse"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Voice Control Button */}
-            <div className="text-center">
-              <div className="relative inline-block">
-                {/* Outer ring animation for listening */}
-                {(isListening || isRecording) && (
-                  <div className="absolute inset-0 rounded-full border-4 border-red-400/50 animate-ping scale-110"></div>
-                )}
-
-                {/* Processing ring */}
-                {isProcessing && (
-                  <div className="absolute inset-0 rounded-full border-4 border-yellow-400/50 animate-pulse scale-110"></div>
-                )}
-
-                {/* Speaking ring */}
-                {isSpeaking && (
-                  <div className="absolute inset-0 rounded-full border-4 border-green-400/50 animate-pulse scale-110"></div>
-                )}
-
-                <button
-                  onMouseDown={startRecording}
-                  onMouseUp={stopRecording}
-                  onTouchStart={startRecording}
-                  onTouchEnd={stopRecording}
-                  disabled={isProcessing || isSpeaking}
-                  className={`relative w-32 h-32 rounded-full transition-all duration-300 shadow-2xl ${
-                    isRecording || isListening
-                      ? "bg-gradient-to-br from-red-500 to-red-600 scale-95 shadow-red-500/50"
-                      : isProcessing
-                      ? "bg-gradient-to-br from-yellow-400 to-yellow-500 shadow-yellow-500/50"
-                      : isSpeaking
-                      ? "bg-gradient-to-br from-green-500 to-green-600 shadow-green-500/50"
-                      : "bg-gradient-to-br from-yellow-300 to-green-400 hover:scale-105 shadow-yellow-500/50"
-                  } disabled:opacity-50 disabled:scale-100`}
-                >
-                  {/* Inner circle */}
-                  <div className="absolute inset-4 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                    <div
-                      className={`w-8 h-8 rounded-full transition-all duration-300 ${
-                        isRecording || isListening
-                          ? "bg-white animate-pulse"
-                          : "bg-white/90"
-                      }`}
-                    ></div>
-                  </div>
-                </button>
-              </div>
-
-              <p className="text-gray-600 text-sm mt-8 font-light">
-                {isRecording ? "Release to send" : "Hold to speak"}
-              </p>
-            </div>
-
-            {/* Instruction text */}
-            {!isListening && !isProcessing && !isSpeaking && (
-              <div className="text-center mt-12">
-                <p className="text-gray-600 text-lg font-light">
-                  Press and hold the button to start your conversation
-                </p>
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 max-w-md mx-auto">
-                  <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <p className="text-sm text-gray-700">
-                      Ask about farming tips
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                    <p className="text-sm text-gray-700">Get weather updates</p>
-                  </div>
-                  <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <p className="text-sm text-gray-700">Learn about schemes</p>
-                  </div>
-                  <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                    <p className="text-sm text-gray-700">
-                      Health consultations
-                    </p>
-                  </div>
+                  {!isListening && !isProcessing && !isSpeaking && (
+                    <div className="flex items-center justify-center">
+                      <div className="w-3 h-3 bg-green-400 rounded-full">
+                        <div className="w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
+
+              {/* Voice Control Button */}
+              <div className="text-center">
+                <div className="relative inline-block mb-6">
+                  {/* Ripple effect for active states */}
+                  {(isListening || isRecording) && (
+                    <>
+                      <div className="absolute inset-0 rounded-full bg-red-400/20 animate-ping scale-110"></div>
+                      <div
+                        className="absolute inset-0 rounded-full bg-red-400/10 animate-ping scale-125"
+                        style={{ animationDelay: "0.5s" }}
+                      ></div>
+                    </>
+                  )}
+
+                  {isProcessing && (
+                    <div className="absolute inset-0 rounded-full bg-yellow-400/20 animate-pulse scale-110"></div>
+                  )}
+
+                  {isSpeaking && (
+                    <div className="absolute inset-0 rounded-full bg-green-400/20 animate-pulse scale-110"></div>
+                  )}
+
+                  <button
+                    onMouseDown={startRecording}
+                    onMouseUp={stopRecording}
+                    onTouchStart={startRecording}
+                    onTouchEnd={stopRecording}
+                    disabled={isProcessing || isSpeaking}
+                    className={`relative w-28 h-28 rounded-full transition-all duration-300 shadow-lg transform ${
+                      isRecording || isListening
+                        ? "bg-gradient-to-br from-red-500 to-red-600 scale-95 shadow-red-500/30"
+                        : isProcessing
+                        ? "bg-gradient-to-br from-yellow-400 to-yellow-500 shadow-yellow-500/30"
+                        : isSpeaking
+                        ? "bg-gradient-to-br from-green-500 to-green-600 shadow-green-500/30"
+                        : "bg-gradient-to-br from-yellow-300 to-green-400 hover:scale-105 shadow-yellow-500/30 hover:shadow-lg"
+                    } disabled:opacity-70 disabled:scale-100 disabled:cursor-not-allowed`}
+                  >
+                    {/* Button content */}
+                    <div className="absolute inset-3 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      {isRecording || isListening ? (
+                        <MicOff className="w-8 h-8 text-white" />
+                      ) : (
+                        <Mic className="w-8 h-8 text-white" />
+                      )}
+                    </div>
+                  </button>
+                </div>
+
+                <p className="text-gray-600 text-sm font-medium">
+                  {isRecording ? "Release to send" : "Hold to speak"}
+                </p>
+              </div>
+
+              {/* Instruction section */}
+              {!isListening && !isProcessing && !isSpeaking && (
+                <div className="text-center mt-8">
+                  <p className="text-gray-600 text-base mb-6">
+                    Press and hold the button to start your conversation
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                    <div className="p-3 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200 text-center">
+                      <p className="text-sm text-gray-700 font-medium">
+                        Ask about farming tips
+                      </p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 text-center">
+                      <p className="text-sm text-gray-700 font-medium">
+                        Get weather updates
+                      </p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200 text-center">
+                      <p className="text-sm text-gray-700 font-medium">
+                        Learn about schemes
+                      </p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 text-center">
+                      <p className="text-sm text-gray-700 font-medium">
+                        Health consultations
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       <style jsx>{`
-        @keyframes pulse {
+        @keyframes waveform {
+          0%,
+          100% {
+            transform: scaleY(0.5);
+          }
+          50% {
+            transform: scaleY(1.5);
+          }
+        }
+
+        @keyframes speaking {
           0%,
           100% {
             transform: scaleY(1);
           }
           50% {
-            transform: scaleY(1.5);
+            transform: scaleY(1.8);
           }
+        }
+
+        .animate-reverse {
+          animation-direction: reverse;
         }
       `}</style>
     </div>
