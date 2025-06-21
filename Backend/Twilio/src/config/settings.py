@@ -9,4 +9,8 @@ class Config:
     TWILIO_FLOW_SID = os.getenv('TWILIO_FLOW_SID')
     TWILIO_FROM_NUMBER = os.getenv('TWILIO_FROM_NUMBER')
     SECRET_KEY = os.getenv('SECRET_KEY')
-    BASE_URL = os.getenv('BASE_URL')  # For TwiML URLs
+    BASE_URL = os.getenv('BASE_URL')
+    
+    # MongoDB configuration
+    MONGODB_URI = os.getenv('MONGODB_URI')
+    MONGODB_DATABASE = os.getenv('MONGODB_DATABASE')
