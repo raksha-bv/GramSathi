@@ -56,20 +56,16 @@ class MongoDBService:
         """Get appointments that need reminders sent"""
         try:
             now = datetime.now()
-            print(f"Looking for reminders before: {now.isoformat()}")
             
             query = {
                 "status": "scheduled",
                 "reminder_datetime": {"$lte": now.isoformat()}
             }
-            print(f"MongoDB query: {query}")
             
             appointments = list(self.appointments_collection.find(query))
-            print(f"Found {len(appointments)} appointments matching query")
             
             for apt in appointments:
                 apt["_id"] = str(apt["_id"])
-                print(f"Appointment: {apt}")
             
             return appointments
         except Exception as e:

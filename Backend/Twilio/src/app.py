@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from controllers.call_controller import CallController
 from config.settings import Config
 import os
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -44,8 +45,96 @@ def debug_config():
         }
     })
 
+@app.route('/debug/trigger-reminders')
+def trigger_reminders():
+    """Manually trigger reminder processing for testing"""
+    try:
+        from services.appointment_scheduler import AppointmentScheduler
+        scheduler = AppointmentScheduler()
+        
+        # Get all scheduled appointments (even future ones for testing)
+        all_appointments = scheduler.mongodb_service.get_appointments()
+        scheduled_appointments = [apt for apt in all_appointments if apt['status'] == 'scheduled']
+        
+        if not scheduled_appointments:
+            return jsonify({
+                'success': False,
+                'message': 'No scheduled appointments found',
+                'appointments': []
+            })
+        
+        results = []
+        for appointment in scheduled_appointments:
+            try:
+                # Make the call regardless of time for testing
+                call_sid = scheduler.twilio_service.make_appointment_reminder_call(
+                    appointment["phone_number"],
+                    appointment["appointment_type"]
+                )
+                
+                if call_sid:
+                    scheduler.mongodb_service.update_appointment_status(
+                        appointment["_id"], 
+                        "reminder_sent"
+                    )
+                    results.append({
+                        'appointment_id': appointment['_id'],
+                        'phone_number': appointment['phone_number'],
+                        'call_sid': call_sid,
+                        'status': 'success'
+                    })
+                else:
+                    results.append({
+                        'appointment_id': appointment['_id'],
+                        'phone_number': appointment['phone_number'],
+                        'status': 'failed',
+                        'error': 'No call SID returned'
+                    })
+                    
+            except Exception as e:
+                results.append({
+                    'appointment_id': appointment['_id'],
+                    'phone_number': appointment['phone_number'],
+                    'status': 'error',
+                    'error': str(e)
+                })
+        
+        return jsonify({
+            'success': True,
+            'message': f'Processed {len(results)} appointments',
+            'results': results
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/debug/schedule-immediate', methods=['POST'])
+def schedule_immediate_test():
+    """Schedule an appointment with reminder in 1 minute for testing"""
+    try:
+        from services.appointment_scheduler import AppointmentScheduler
+        scheduler = AppointmentScheduler()
+        
+        # Schedule for 2 minutes from now, reminder in 1 minute
+        now = datetime.now()
+        appointment_time = now + timedelta(minutes=2)
+        
+        result = scheduler.schedule_appointment_reminder(
+            phone_number="+917204663202",
+            appointment_datetime=appointment_time.strftime("%Y-%m-%d %H:%M"),
+            appointment_type="test appointment"
+        )
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
 if __name__ == '__main__':
-    # Production-ready configuration
-    port = int(os.environ.get('PORT', 5000))
-    debug_mode = os.environ.get('FLASK_ENV') == 'development'
-    app.run(debug=debug_mode, host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0', port=5000)
