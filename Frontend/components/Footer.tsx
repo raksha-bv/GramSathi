@@ -14,25 +14,25 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-6 py-16">
+    <footer className="bg-gray-900 text-white text-sm">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-6 sm:py-10">
         {/* Main Footer Content */}
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4">
           {/* Brand Section */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
               <img
                 src="/logo.png"
                 alt="GramSathi Logo"
-                className="w-12 h-12 rounded-xl object-cover"
+                className="w-9 h-9 rounded-lg object-cover"
               />
-              <span className="text-2xl font-bold">GramSathi</span>
+              <span className="text-lg font-bold">GramSathi</span>
             </div>
-            <p className="text-gray-400 leading-relaxed">
+            <p className="text-gray-400 leading-relaxed text-xs">
               AI-powered digital assistant providing personalized support for
               rural communities across India.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-3">
               <Link
                 href="#"
                 className="text-gray-400 hover:text-yellow-400 transition-colors duration-300"
@@ -62,8 +62,8 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-3">
+            <h3 className="text-base font-semibold mb-2">Quick Links</h3>
+            <ul className="space-y-2">
               <li>
                 <Link
                   href="chat"
@@ -101,8 +101,8 @@ const Footer = () => {
 
           {/* Features */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Features</h3>
-            <ul className="space-y-3">
+            <h3 className="text-base font-semibold mb-2">Features</h3>
+            <ul className="space-y-2">
               <li>
                 <a
                   href="#"
@@ -140,8 +140,8 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Contact</h3>
-            <div className="space-y-3">
+            <h3 className="text-base font-semibold mb-2">Contact</h3>
+            <div className="space-y-2">
               <div className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-gray-400" />
                 <span className="text-gray-400">support@gramsathi.com</span>
@@ -163,27 +163,27 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-800 mt-12 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-gray-400 text-sm">
+        <div className="border-t border-gray-800 mt-6 sm:mt-10 pt-4 sm:pt-6">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
+            <p className="text-gray-400 text-xs text-center md:text-left">
               © 2025 GramSathi. All rights reserved.
             </p>
-            <div className="flex space-x-6">
+            <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-4 text-center">
               <a
                 href="#"
-                className="text-gray-400 hover:text-white text-sm transition-colors duration-300"
+                className="text-gray-400 hover:text-white text-xs transition-colors duration-300"
               >
                 Privacy Policy
               </a>
               <a
                 href="#"
-                className="text-gray-400 hover:text-white text-sm transition-colors duration-300"
+                className="text-gray-400 hover:text-white text-xs transition-colors duration-300"
               >
                 Terms of Service
               </a>
               <a
                 href="#"
-                className="text-gray-400 hover:text-white text-sm transition-colors duration-300"
+                className="text-gray-400 hover:text-white text-xs transition-colors duration-300"
               >
                 Support
               </a>

@@ -14,74 +14,78 @@ import {
 const FeaturesSection = () => {
   const features = [
     {
-      title: "Agriculture Advisor",
+      title: "Farming Help",
       description:
-        "Uses weather APIs to check conditions and suggest optimal crops to grow. Scrapes web sources for real-time prices of condiments like potatoes, onions, etc. Advises whether to hold or sell based on market trends and forecasts.",
+        "Get weather updates and crop suggestions. Know current market prices and when to sell or hold your crops.",
       icon: <Sprout className="w-6 h-6 text-gray-700" />,
       available: true,
     },
     {
-      title: "Pregnancy & Women's Health Support",
+      title: "Women's Health",
       description:
-        "Appointment reminders for antenatal care (ANC) check-ups. Nutrition tips and safe practices for pregnancy. Leverages NRHM APIs for maternal/child health data.",
+        "Pregnancy care tips, hospital checkup reminders, and safe delivery information for mothers.",
       icon: <Heart className="w-6 h-6 text-gray-700" />,
       available: true,
     },
     {
-      title: "Government Scheme Awareness",
+      title: "Government Schemes",
       description:
-        "Connects to National Portal API to inform users about relevant central/state schemes (PM-KISAN, Ayushman Bharat, etc.). Explains eligibility and helps in application processes.",
+        "Information about PM-KISAN, Ayushman Bharat and other schemes. Help with applications and eligibility.",
       icon: <FileText className="w-6 h-6 text-gray-700" />,
       available: false,
     },
     {
-      title: "Agricultural Knowledge Integration",
+      title: "Agriculture Knowledge",
       description:
-        "Connects with KVK (Krishi Vigyan Kendras) and ICAR (Indian Council of Agricultural Research) databases for best practices, pest control tips, and crop rotation methods.",
+        "Pest control tips, crop rotation advice, and best farming practices from agricultural experts.",
       icon: <Users className="w-6 h-6 text-gray-700" />,
       available: true,
     },
   ];
 
   return (
-    <section className="py-20">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="py-12 sm:py-16 lg:py-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-6">
-            Features
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+            Our Services
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Comprehensive AI-powered assistance for rural communities across
-            India
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
+            AI-powered assistance for all your rural needs
           </p>
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="space-y-4">
+            <div
+              key={index}
+              className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-2xl border border-yellow-200 hover:shadow-lg transition-all duration-300"
+            >
               {/* Header */}
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-gray-100 rounded-lg">{feature.icon}</div>
-                <div className="flex items-center space-x-3">
-                  <h3 className="text-2xl font-bold text-gray-900">
+              <div className="flex items-start space-x-3 sm:space-x-4 mb-3">
+                <div className="p-2 bg-yellow-100 rounded-lg flex-shrink-0">
+                  {feature.icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                     {feature.title}
                   </h3>
                   {feature.available ? (
-                    <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
+                    <span className="inline-block px-2 sm:px-3 py-1 bg-green-100 text-green-700 text-xs sm:text-sm font-medium rounded-full">
                       Available
                     </span>
                   ) : (
-                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
-                      Planned
+                    <span className="inline-block px-2 sm:px-3 py-1 bg-orange-100 text-orange-700 text-xs sm:text-sm font-medium rounded-full">
+                      Coming Soon
                     </span>
                   )}
                 </div>
               </div>
 
               {/* Description */}
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
                 {feature.description}
               </p>
             </div>
@@ -89,8 +93,8 @@ const FeaturesSection = () => {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-20">
-          <button className="bg-yellow-200 hover:bg-[#FFED70] px-8 py-4 rounded-full text-gray-900 font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300">
+        <div className="text-center mt-12 sm:mt-16">
+          <button className="bg-yellow-300 hover:bg-yellow-400 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-gray-900 font-bold text-base sm:text-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300">
             Get Started
           </button>
         </div>

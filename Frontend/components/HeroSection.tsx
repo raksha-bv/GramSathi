@@ -16,8 +16,10 @@ const HeroSection = () => {
       text: "নমস্কার! আজ আমি আপনাকে কীভাবে সাহায্য করতে পারি?",
       lang: "Bengali",
     },
-    { text: "ഹലോ! ഇന്ന് ഞാൻ നിങ്ങളെ എങ്ങനെ സഹായിക്കാമെന്ന് പറയൂ?", lang: "Malayalam" }
-,
+    {
+      text: "ഹലോ! ഇന്ന് ഞാൻ നിങ്ങളെ എങ്ങനെ സഹായിക്കാമെന്ന് പറയൂ?",
+      lang: "Malayalam",
+    },
     { text: "नमस्कार! आज मी तुमची कशी मदत करू शकतो?", lang: "Marathi" },
     { text: "ଆଦାବ! ଆଜି ମୁଁ ଆପଣଙ୍କୁ କିପରି ସାହାଯ୍ୟ କରିପାରିବି?", lang: "Odia" },
     {
@@ -54,12 +56,12 @@ const HeroSection = () => {
     <div className="max-w-7xl mx-auto px-6 py-12">
       <div className="grid lg:grid-cols-2 gap-12 items-center">
         {/* Left Content */}
-        <div className="space-y-8">
+        <div className="space-y-2 lg:space-y-8">
           <div>
-            <h1 className="text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
+            <h1 className="text-4xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
               AI for Rural Communities
             </h1>
-            <p className="text-xl text-gray-600 mt-6 leading-relaxed">
+            <p className="text-xl text-gray-600 mt-6 leading-relaxed pl-2">
               GramSathi is an AI-powered digital assistant that provides
               personalized, real-time support on agriculture, health, and
               government schemes for rural users across India.
@@ -88,15 +90,15 @@ const HeroSection = () => {
               </span>
             </div>
             <p
-              className={`text-gray-700 font-medium transition-all duration-300 min-h-[3rem] flex items-center ${
+              className={`text-gray-700 font-medium transition-all duration-300 min-h-[3rem] text-base flex items-center ${
                 isAnimating
-                  ? "opacity-0 transform translate-y-2"
-                  : "opacity-100 transform translate-y-0"
+                  ? "opacity-0 translate-y-2"
+                  : "opacity-100 translate-y-0"
               }`}
             >
               {greetings[currentGreetingIndex].text}
             </p>
-            <div className="absolute left-4 bottom-0 transform translate-y-2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-white"></div>
+            <div className="absolute left-4 bottom-0 translate-y-2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-white"></div>
 
             {/* Typing indicator dots */}
             <div className="flex space-x-1 mt-2">
