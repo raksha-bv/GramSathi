@@ -34,7 +34,9 @@ export class ChatbotService {
     commodity?: string;
     location?: string;
     state?: string;
-  } = {}; // Add context storage
+  } = {};
+
+  private detectedSourceLanguage: string | null = null;
 
   constructor() {
     this.sarvamAI = new SarvamAIService();
@@ -72,8 +74,30 @@ export class ChatbotService {
         timestamp: new Date(),
       });
 
-      // Detect intents
-      const appointmentIntent = this.detectAppointmentIntent(userMessage);
+      // NEW: Translate user message to English for intent detection
+      let messageForIntentDetection = userMessage;
+      try {
+        // Only translate if message doesn't appear to be in English
+        if (this.isNonEnglishMessage(userMessage)) {
+          console.log("Translating message for intent detection...");
+          messageForIntentDetection = await this.sarvamAI.translateText(
+            userMessage,
+            "en-IN"
+          );
+          console.log("Translated message:", messageForIntentDetection);
+        }
+      } catch (translationError) {
+        console.warn(
+          "Translation failed, using original message:",
+          translationError
+        );
+        // Continue with original message if translation fails
+      }
+
+      // Detect intents using the translated message
+      const appointmentIntent = this.detectAppointmentIntent(
+        messageForIntentDetection
+      );
       console.log("Detected appointment intent:", appointmentIntent);
 
       let response: string;
@@ -111,7 +135,6 @@ export class ChatbotService {
               appointmentScheduled = true;
               response = `Perfect! I've scheduled a reminder call for your ${appointmentIntent.appointmentType} appointment. You'll receive a call at ${appointmentIntent.phoneNumber} one hour before your appointment. The reminder is set for ${result.reminder_time}.`;
 
-              // Clear appointment context to prevent interference with new appointments
               setTimeout(() => {
                 this.clearAppointmentContext();
               }, 100);
@@ -125,7 +148,6 @@ export class ChatbotService {
           }
         }
 
-        // Return immediately for appointment scheduling - don't process other intents
         return {
           response,
           appointmentScheduled,
@@ -134,8 +156,8 @@ export class ChatbotService {
       }
 
       // Only process other intents if it's NOT an appointment
-      const weatherIntent = this.detectWeatherIntent(userMessage);
-      const marketIntent = this.detectMarketIntent(userMessage);
+      const weatherIntent = this.detectWeatherIntent(messageForIntentDetection);
+      const marketIntent = this.detectMarketIntent(messageForIntentDetection);
 
       // Handle market queries first
       if (marketIntent.type !== "none") {
@@ -145,7 +167,7 @@ export class ChatbotService {
           // Use context from previous queries if current query is incomplete
           const effectiveIntent = this.enhanceMarketIntentWithContext(
             marketIntent,
-            userMessage
+            messageForIntentDetection
           );
           console.log("Enhanced market intent:", effectiveIntent);
 
@@ -155,7 +177,6 @@ export class ChatbotService {
             marketData ? "Success" : "No data"
           );
 
-          // Store this query for future context
           if (effectiveIntent.commodity) {
             this.lastMarketQuery = {
               commodity: effectiveIntent.commodity,
@@ -164,6 +185,7 @@ export class ChatbotService {
             };
           }
 
+          // Use original user message for AI response (preserves user's language context)
           response = await this.generateAIMarketResponse(
             userMessage,
             marketData,
@@ -172,7 +194,6 @@ export class ChatbotService {
         } catch (marketError) {
           console.error("Market API error:", marketError);
 
-          // If missing parameters, ask user to clarify
           if (
             marketError instanceof Error &&
             (marketError.message.includes("Missing query parameters") ||
@@ -195,6 +216,7 @@ export class ChatbotService {
             weatherData ? "Success" : "No data"
           );
 
+          // Use original user message for AI response
           response = await this.generateAIWeatherResponse(
             userMessage,
             weatherData,
@@ -234,8 +256,8 @@ export class ChatbotService {
       // Keep conversation history manageable
       if (this.conversationHistory.length > 10) {
         this.conversationHistory = [
-          this.conversationHistory[0], // Keep system message
-          ...this.conversationHistory.slice(-8), // Keep last 8 messages
+          this.conversationHistory[0],
+          ...this.conversationHistory.slice(-8),
         ];
       }
 
@@ -250,6 +272,51 @@ export class ChatbotService {
       console.error("Error processing message:", error);
       throw error;
     }
+  }
+
+  // NEW: Helper method to detect if message is likely in a non-English language
+  private isNonEnglishMessage(message: string): boolean {
+    // Check for common English words
+    const englishWords = [
+      "the",
+      "and",
+      "or",
+      "but",
+      "is",
+      "are",
+      "was",
+      "were",
+      "have",
+      "has",
+      "had",
+      "do",
+      "does",
+      "did",
+      "will",
+      "would",
+      "could",
+      "should",
+      "what",
+      "where",
+      "when",
+      "how",
+      "price",
+      "weather",
+      "today",
+      "tomorrow",
+    ];
+    const words = message.toLowerCase().split(/\s+/);
+    const englishWordCount = words.filter((word) =>
+      englishWords.includes(word)
+    ).length;
+
+    // If less than 20% of words are common English words, likely non-English
+    const englishRatio = englishWordCount / words.length;
+
+    // Also check for non-Latin characters (Devanagari, etc.)
+    const hasNonLatinChars = /[^\u0000-\u007F\u00A0-\u00FF]/.test(message);
+
+    return englishRatio < 0.2 || hasNonLatinChars;
   }
 
   private enhanceMarketIntentWithContext(
@@ -343,49 +410,45 @@ export class ChatbotService {
   private extractCommodity(message: string): string | undefined {
     const messageLower = message.toLowerCase();
 
-    // Common commodity mappings with more variations
+    // Enhanced commodity mappings with translations
     const commodityMap: { [key: string]: string } = {
-      // Potato variations
+      // English variations
       potato: "Potato",
       potatoes: "Potato",
-      aloo: "Potato",
-
-      // Tomato variations
       tomato: "Tomato",
       tomatoes: "Tomato",
-      tamatar: "Tomato",
-
-      // Onion variations
       onion: "Onion",
       onions: "Onion",
-      pyaz: "Onion",
 
-      // Other vegetables
+      // Hindi/Local language variations (common ones)
+      aloo: "Potato",
+      आलू: "Potato",
+      tamatar: "Tomato",
+      टमाटर: "Tomato",
+      pyaz: "Onion",
+      प्याज: "Onion",
+      bhindi: "Lady Finger",
+      भिंडी: "Lady Finger",
+      baingan: "Brinjal",
+      बैंगन: "Brinjal",
+
+      // Add more local language mappings as needed
       "lady finger": "Lady Finger",
       ladyfinger: "Lady Finger",
-      "ladies finger": "Lady Finger",
-      ladiesfinger: "Lady Finger",
       okra: "Lady Finger",
-      bhindi: "Lady Finger",
-
       brinjal: "Brinjal",
       eggplant: "Brinjal",
-      baingan: "Brinjal",
-
       cabbage: "Cabbage",
       cauliflower: "Cauliflower",
       carrot: "Carrot",
       beans: "Beans",
       peas: "Peas",
-
-      // Grains
       rice: "Rice",
       wheat: "Wheat",
       corn: "Maize",
       maize: "Maize",
     };
 
-    // Split message into words and filter out common words that might interfere
     const words = messageLower.split(/\s+/);
     const filteredWords = words.filter(
       (word) =>
@@ -401,16 +464,21 @@ export class ChatbotService {
           "today",
           "how",
           "much",
+          "कीमत",
+          "दाम",
+          "भाव",
+          "क्या",
+          "है",
+          "की",
+          "में",
+          "आज",
         ].includes(word)
     );
 
-    // Check each filtered word
     for (const word of filteredWords) {
-      // Clean the word (remove punctuation)
       const cleanWord = word.replace(/[.,!?;:]/g, "");
 
       for (const [key, value] of Object.entries(commodityMap)) {
-        // Exact match or word contains commodity name (but not vice versa to avoid "rice" in "price")
         if (
           cleanWord === key ||
           (cleanWord.length > 3 && cleanWord.includes(key) && key.length > 3)
@@ -428,10 +496,11 @@ export class ChatbotService {
   private extractLocation(message: string): string | undefined {
     const messageLower = message.toLowerCase();
 
-    // Karnataka districts as returned by the API
+    // Enhanced location mappings with local language support
     const districts = [
       "bagalkot",
       "bangalore",
+      "bengaluru",
       "belgaum",
       "bellary",
       "bidar",
@@ -461,51 +530,28 @@ export class ChatbotService {
       "yadgiri",
     ];
 
-    // City to district mapping for better user experience
-    const cityToDistrict: { [key: string]: string } = {
-      // Cities in Hassan district
-      belur: "Hassan",
-      halebidu: "Hassan",
-      arsikere: "Hassan",
-
-      // Cities in Bangalore district
-      bengaluru: "Bangalore",
+    // Add Hindi/local language mappings if needed
+    const locationMap: { [key: string]: string } = {
+      // English to proper case
       bangalore: "Bangalore",
-
-      // Cities in Mysore district
+      bengaluru: "Bangalore",
       mysuru: "Mysore",
       mysore: "Mysore",
-
-      // Cities in other districts
       hubli: "Dharwad",
       belagavi: "Belgaum",
       ballari: "Bellary",
-      vijayapura: "Bijapur",
-      kalaburagi: "Kalburgi",
-      shivamogga: "Shimoga",
-      tumakuru: "Tumkur",
-      chikkamagaluru: "Chikmagalur",
-      "uttara kannada": "Karwar",
-      "dakshina kannada": "Mangalore",
-      mangaluru: "Mangalore",
-
-      // Additional city mappings
-      chintamani: "Kolar",
-      malur: "Kolar",
-      srinivaspur: "Kolar",
-      mulbagal: "Kolar",
-      bagepalli: "Kolar",
-      gauribidanur: "Kolar",
-      sidlaghatta: "Kolar",
+      // Add local language mappings as needed
+      कोलार: "Kolar",
+      बैंगलोर: "Bangalore",
+      मैसूर: "Mysore",
     };
 
     const words = messageLower.split(/\s+/);
 
     for (const word of words) {
-      // Clean the word (remove punctuation)
       const cleanWord = word.replace(/[.,!?;:]/g, "");
 
-      // Skip common words that are not locations
+      // Skip common words
       if (
         [
           "price",
@@ -519,12 +565,33 @@ export class ChatbotService {
           "is",
           "how",
           "much",
+          "कीमत",
+          "में",
+          "पर",
+          "आज",
+          "कल",
+          "क्या",
+          "है",
+          "कैसे",
+          "कितना",
         ].includes(cleanWord)
       ) {
         continue;
       }
 
-      // First check if it's a direct district match
+      // Check location mappings first
+      for (const [key, value] of Object.entries(locationMap)) {
+        if (
+          cleanWord === key ||
+          cleanWord.includes(key) ||
+          key.includes(cleanWord)
+        ) {
+          console.log(`Found location: ${cleanWord} -> ${key} -> ${value}`);
+          return value;
+        }
+      }
+
+      // Then check direct district matches
       for (const district of districts) {
         if (
           cleanWord === district ||
@@ -535,18 +602,6 @@ export class ChatbotService {
             district.charAt(0).toUpperCase() + district.slice(1);
           console.log(`Found district: ${cleanWord} -> ${properDistrict}`);
           return properDistrict;
-        }
-      }
-
-      // Then check city to district mapping
-      for (const [city, district] of Object.entries(cityToDistrict)) {
-        if (
-          cleanWord === city ||
-          cleanWord.includes(city) ||
-          city.includes(cleanWord)
-        ) {
-          console.log(`Found city: ${cleanWord} -> ${city} -> ${district}`);
-          return district;
         }
       }
     }

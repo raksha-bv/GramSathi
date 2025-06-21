@@ -24,17 +24,17 @@ export async function POST(request: NextRequest) {
 
     // Translate if needed
     let translatedResponse = result.response;
-    if (language && language !== "en" && language !== "en-US") {
-      try {
-        translatedResponse = await chatbot.translateResponse(
-          result.response,
-          language
-        );
-      } catch (translationError) {
-        console.error("Translation failed:", translationError);
-        // Keep original response if translation fails
-      }
-    }
+    // if (language && language !== "en" && language !== "en-US") {
+    //   try {
+    //     translatedResponse = await chatbot.translateResponse(
+    //       result.response,
+    //       language
+    //     );
+    //   } catch (translationError) {
+    //     console.error("Translation failed:", translationError);
+    //     // Keep original response if translation fails
+    //   }
+    // }
 
     console.log("Chat API - Sending response:", translatedResponse);
 
