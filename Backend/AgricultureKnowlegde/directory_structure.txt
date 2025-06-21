@@ -1,0 +1,8 @@
+AgricultureKnowlegde/
+    districts_output.txt
+    requirements.txt
+    vercel.json
+    api/
+        gsak.py
+    data/
+        ICRISAT-District Level Data.csv
