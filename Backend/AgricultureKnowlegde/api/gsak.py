@@ -346,6 +346,18 @@ class GramSathiAgriKnowledge:
 agri_system = GramSathiAgriKnowledge("./ICRISAT-District Level Data.csv")
 
 # API Routes
+
+
+@app.route('/',methods=['GET'])
+def index():
+    """Index route to check if the server is running"""
+    return jsonify({
+        'message': 'GramSathi Agricultural Knowledge API is running',
+        'timestamp': datetime.now().isoformat(),
+        'dataset_loaded': agri_system.dataset is not None,
+        'total_records': len(agri_system.dataset) if agri_system.dataset is not None else 0
+    })
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
