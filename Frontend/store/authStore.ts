@@ -1,9 +1,11 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface User {
-  id: string;
+  id?: string; // Frontend preferred
+  _id?: string; // MongoDB default
   name: string;
+  age: number;
   phoneNumber: string;
   occupation: string;
   village: string;
@@ -14,6 +16,12 @@ interface User {
   cropsGrown?: string[];
   farmSize?: number;
   profilePic?: string;
+  // Eligibility fields
+  category: "General" | "SC" | "ST" | "OBC";
+  isBPL: boolean;
+  isDisabled: boolean;
+  isWidow: boolean;
+  hasShelter: boolean;
 }
 
 interface AuthState {
@@ -34,6 +42,7 @@ interface AuthActions {
 
 interface RegisterData {
   name: string;
+  age: number;
   gender: string;
   occupation: string;
   cropsGrown?: string[];
@@ -43,11 +52,18 @@ interface RegisterData {
   district: string;
   state: string;
   farmSize?: number;
+  // Eligibility fields
+  category: "General" | "SC" | "ST" | "OBC";
+  isBPL?: boolean;
+  isDisabled?: boolean;
+  isWidow?: boolean;
+  hasShelter?: boolean;
 }
 
 type AuthStore = AuthState & AuthActions;
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
 
 export const useAuthStore = create<AuthStore>()(
   persist(
@@ -62,12 +78,12 @@ export const useAuthStore = create<AuthStore>()(
       // Actions
       login: async (phoneNumber: string) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const response = await fetch(`${API_BASE_URL}/users/login`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({ phoneNumber }),
           });
@@ -75,7 +91,7 @@ export const useAuthStore = create<AuthStore>()(
           const data = await response.json();
 
           if (!response.ok) {
-            throw new Error(data.message || 'User not found');
+            throw new Error(data.message || "User not found");
           }
 
           set({
@@ -87,7 +103,7 @@ export const useAuthStore = create<AuthStore>()(
           });
         } catch (error) {
           set({
-            error: error instanceof Error ? error.message : 'Login failed',
+            error: error instanceof Error ? error.message : "Login failed",
             isLoading: false,
             isAuthenticated: false,
           });
@@ -97,20 +113,24 @@ export const useAuthStore = create<AuthStore>()(
 
       register: async (userData: RegisterData) => {
         set({ isLoading: true, error: null });
-        
+
         try {
+          console.log("Registering user with data:", userData); // Debug log
+
           const response = await fetch(`${API_BASE_URL}/users/register`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify(userData),
           });
 
           const data = await response.json();
 
+          console.log("Registration response:", data); // Debug log
+
           if (!response.ok) {
-            throw new Error(data.message || 'Registration failed');
+            throw new Error(data.message || "Registration failed");
           }
 
           set({
@@ -121,11 +141,14 @@ export const useAuthStore = create<AuthStore>()(
             error: null,
           });
         } catch (error) {
+          console.error("Registration error:", error); // Debug log
           set({
-            error: error instanceof Error ? error.message : 'Registration failed',
+            error:
+              error instanceof Error ? error.message : "Registration failed",
             isLoading: false,
             isAuthenticated: false,
           });
+          throw error;
         }
       },
 
@@ -147,7 +170,7 @@ export const useAuthStore = create<AuthStore>()(
       },
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       partialize: (state) => ({
         user: state.user,
         token: state.token,

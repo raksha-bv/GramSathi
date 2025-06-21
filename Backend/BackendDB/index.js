@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import userRoutes from "./routes/user.routes.js";
+import eligibilityRoutes from "./routes/eligibility.routes.js";
+import schemeRoutes from "./routes/scheme.routes.js";
 
 // Load environment variables
 dotenv.config();
@@ -31,13 +33,15 @@ const connectDB = async () => {
 
 // Routes
 app.use("/api/users", userRoutes);
+app.use("/api/eligibility", eligibilityRoutes);
+app.use("/api/schemes", schemeRoutes);
 
 // Health check route
 app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "GramSathi API is running!",
-    version: "1.0.0"
+    version: "1.0.0",
   });
 });
 
@@ -46,7 +50,7 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
     success: false,
-    message: "Something went wrong!"
+    message: "Something went wrong!",
   });
 });
 
@@ -54,7 +58,7 @@ app.use((err, req, res, next) => {
 app.use("*", (req, res) => {
   res.status(404).json({
     success: false,
-    message: "Route not found"
+    message: "Route not found",
   });
 });
 

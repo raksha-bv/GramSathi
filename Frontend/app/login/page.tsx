@@ -9,7 +9,8 @@ const LoginPage: React.FC = () => {
   const [showRegistration, setShowRegistration] = useState(false);
   const [registrationData, setRegistrationData] = useState({
     name: "",
-    gender: "",
+    age: "",
+    gender: "" as "Male" | "Female" | "Other" | "",
     occupation: "",
     cropsGrown: [] as string[],
     language: "",
@@ -17,6 +18,12 @@ const LoginPage: React.FC = () => {
     district: "",
     state: "",
     farmSize: "",
+    // Eligibility fields with proper typing
+    category: "" as "General" | "SC" | "ST" | "OBC" | "",
+    isBPL: false,
+    isDisabled: false,
+    isWidow: false,
+    hasShelter: true,
   });
 
   const { login, register, isLoading, error, isAuthenticated, clearError } =
@@ -42,31 +49,67 @@ const LoginPage: React.FC = () => {
 
     try {
       // Try to login first (check if user exists)
-      await login(phoneNumber); // We'll modify backend to handle this
+      await login(phoneNumber);
     } catch (err) {
       // If login fails, show registration form
       setShowRegistration(true);
     }
   };
 
+  // Update the handleRegistrationSubmit function with better debugging
   const handleRegistrationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate required fields
+    if (
+      !registrationData.category ||
+      !registrationData.gender ||
+      !registrationData.name ||
+      !registrationData.age
+    ) {
+      console.error("Missing required fields:", {
+        category: registrationData.category,
+        gender: registrationData.gender,
+        name: registrationData.name,
+        age: registrationData.age,
+      });
+      return;
+    }
+
     const userData = {
-      ...registrationData,
-      phoneNumber,
-      password: phoneNumber, // Use phone number as password for simplicity
+      name: registrationData.name.trim(),
+      phoneNumber: phoneNumber.trim(),
+      age: Number(registrationData.age),
+      gender: registrationData.gender as "Male" | "Female" | "Other",
+      category: registrationData.category as "General" | "SC" | "ST" | "OBC",
+      occupation: registrationData.occupation,
+      language: registrationData.language,
+      village: registrationData.village.trim(),
+      district: registrationData.district.trim(),
+      state: registrationData.state.trim(),
       cropsGrown:
         registrationData.occupation === "Farmer"
           ? registrationData.cropsGrown
           : [],
       farmSize:
-        registrationData.occupation === "Farmer"
-          ? Number(registrationData.farmSize) || undefined
+        registrationData.occupation === "Farmer" && registrationData.farmSize
+          ? Number(registrationData.farmSize)
           : undefined,
+      // Eligibility fields
+      isBPL: registrationData.isBPL,
+      isDisabled: registrationData.isDisabled,
+      isWidow: registrationData.isWidow,
+      hasShelter: registrationData.hasShelter,
     };
 
-    await register(userData);
+    // Debug: Log the data being sent
+    console.log("Sending user data:", userData);
+
+    try {
+      await register(userData);
+    } catch (error) {
+      console.error("Registration error:", error);
+    }
   };
 
   const formatPhoneNumber = (value: string) => {
@@ -174,7 +217,7 @@ const LoginPage: React.FC = () => {
             </form>
           ) : (
             /* Registration Form */
-            <form onSubmit={handleRegistrationSubmit} className="space-y-4">
+            <form onSubmit={handleRegistrationSubmit} className="space-y-4 max-h-96 overflow-y-auto pr-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   👤 Your Name
@@ -195,6 +238,26 @@ const LoginPage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  🎂 Age
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  max="120"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  value={registrationData.age}
+                  onChange={(e) =>
+                    setRegistrationData((prev) => ({
+                      ...prev,
+                      age: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   ⚧ Gender
                 </label>
                 <select
@@ -204,7 +267,7 @@ const LoginPage: React.FC = () => {
                   onChange={(e) =>
                     setRegistrationData((prev) => ({
                       ...prev,
-                      gender: e.target.value,
+                      gender: e.target.value as "Male" | "Female" | "Other",
                     }))
                   }
                 >
@@ -212,6 +275,29 @@ const LoginPage: React.FC = () => {
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  🏛️ Category
+                </label>
+                <select
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  value={registrationData.category}
+                  onChange={(e) =>
+                    setRegistrationData((prev) => ({
+                      ...prev,
+                      category: e.target.value as "General" | "SC" | "ST" | "OBC",
+                    }))
+                  }
+                >
+                  <option value="">Select Category</option>
+                  <option value="General">General</option>
+                  <option value="SC">SC</option>
+                  <option value="ST">ST</option>
+                  <option value="OBC">OBC</option>
                 </select>
               </div>
 
@@ -238,60 +324,143 @@ const LoginPage: React.FC = () => {
                   <option value="Healthcare Worker">Healthcare Worker</option>
                   <option value="Artisan">Artisan</option>
                   <option value="Labor">Labor</option>
-                  <option value="Government Employee">
-                    Government Employee
-                  </option>
+                  <option value="Government Employee">Government Employee</option>
                   <option value="Business Owner">Business Owner</option>
                   <option value="Student">Student</option>
+                  <option value="Manual Scavenger">Manual Scavenger</option>
                   <option value="Other">Other</option>
                 </select>
               </div>
 
-              {registrationData.occupation === "Farmer" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    🌾 Crops Grown
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      "Rice",
-                      "Wheat",
-                      "Maize",
-                      "Potato",
-                      "Tomato",
-                      "Onion",
-                    ].map((crop) => (
-                      <label key={crop} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={registrationData.cropsGrown.includes(crop)}
-                          onChange={() => handleCropChange(crop)}
-                          className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-                        />
-                        <span className="text-sm">{crop}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {registrationData.occupation === "Farmer" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    📏 Farm Size (acres)
-                  </label>
+              {/* Eligibility Questions */}
+              <div className="space-y-3 bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-700">📋 Eligibility Information</h4>
+                
+                <div className="flex items-center space-x-2">
                   <input
-                    type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                    value={registrationData.farmSize}
+                    type="checkbox"
+                    id="isBPL"
+                    checked={registrationData.isBPL}
                     onChange={(e) =>
                       setRegistrationData((prev) => ({
                         ...prev,
-                        farmSize: e.target.value,
+                        isBPL: e.target.checked,
                       }))
                     }
+                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                   />
+                  <label htmlFor="isBPL" className="text-sm text-gray-700">
+                    I have a BPL (Below Poverty Line) card
+                  </label>
                 </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isDisabled"
+                    checked={registrationData.isDisabled}
+                    onChange={(e) =>
+                      setRegistrationData((prev) => ({
+                        ...prev,
+                        isDisabled: e.target.checked,
+                      }))
+                    }
+                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  />
+                  <label htmlFor="isDisabled" className="text-sm text-gray-700">
+                    I have a disability
+                  </label>
+                </div>
+
+                {registrationData.gender === "Female" && (
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isWidow"
+                      checked={registrationData.isWidow}
+                      onChange={(e) =>
+                        setRegistrationData((prev) => ({
+                          ...prev,
+                          isWidow: e.target.checked,
+                        }))
+                      }
+                      className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    />
+                    <label htmlFor="isWidow" className="text-sm text-gray-700">
+                      I am a widow
+                    </label>
+                  </div>
+                )}
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="hasShelter"
+                    checked={registrationData.hasShelter}
+                    onChange={(e) =>
+                      setRegistrationData((prev) => ({
+                        ...prev,
+                        hasShelter: e.target.checked,
+                      }))
+                    }
+                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  />
+                  <label htmlFor="hasShelter" className="text-sm text-gray-700">
+                    I have proper shelter/housing
+                  </label>
+                </div>
+              </div>
+
+              {/* Rest of the form fields... */}
+              {registrationData.occupation === "Farmer" && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      🌾 Crops Grown
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {/*
+                        Crop options can be fetched from an API or defined in a constant array
+                        For now, we are using a static list of crops
+                      */}
+                      {[
+                        "Rice",
+                        "Wheat",
+                        "Maize",
+                        "Potato",
+                        "Tomato",
+                        "Onion",
+                      ].map((crop) => (
+                        <label key={crop} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={registrationData.cropsGrown.includes(crop)}
+                            onChange={() => handleCropChange(crop)}
+                            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                          />
+                          <span className="text-sm">{crop}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      📏 Farm Size (acres)
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      value={registrationData.farmSize}
+                      onChange={(e) =>
+                        setRegistrationData((prev) => ({
+                          ...prev,
+                          farmSize: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </>
               )}
 
               <div>
@@ -385,7 +554,8 @@ const LoginPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700"
+                  disabled={!registrationData.category || !registrationData.gender}
+                  className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Register
                 </button>

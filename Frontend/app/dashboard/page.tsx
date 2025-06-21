@@ -3,10 +3,20 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../../store/authStore";
+import { useSchemeStore } from "../../store/schemeStore";
 import WeatherAlert from "../../components/WeatherAlert";
 import MarketPrices from "../../components/MarketPrices";
 import { ProcessedWeatherData } from "../../types/weather";
-import { Bot, Phone, MapPin, BarChart3, Settings, LogOut } from "lucide-react";
+import {
+  Bot,
+  Phone,
+  MapPin,
+  BarChart3,
+  Settings,
+  LogOut,
+  Award,
+  Gift,
+} from "lucide-react";
 import Link from "next/link";
 
 const DashboardPage: React.FC = () => {
@@ -17,6 +27,12 @@ const DashboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { user, logout, isAuthenticated } = useAuthStore();
+  const {
+    eligibleSchemes,
+    fetchEligibleSchemes,
+    isLoading: schemesLoading,
+    error: schemesError,
+  } = useSchemeStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -43,6 +59,18 @@ const DashboardPage: React.FC = () => {
 
     fetchWeatherData();
   }, []);
+
+  useEffect(() => {
+    // Try to get user ID from either id or _id field
+    const userId = user?.id || user?._id;
+
+    if (userId) {
+      console.log("Fetching schemes for user ID:", userId);
+      fetchEligibleSchemes(userId);
+    } else {
+      console.log("No user ID available, user object:", user);
+    }
+  }, [user, fetchEligibleSchemes]);
 
   const handleLogout = () => {
     logout();
@@ -178,6 +206,54 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Eligible Schemes Alert */}
+        {eligibleSchemes.length > 0 && (
+          <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl shadow-sm p-6 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 p-3 rounded-full">
+                <Award className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold mb-2">
+                  🎉 Great News! You're eligible for {eligibleSchemes.length}{" "}
+                  government scheme
+                  {eligibleSchemes.length > 1 ? "s" : ""}!
+                </h3>
+                <p className="text-green-100 mb-4">
+                  You can apply for these schemes and receive benefits up to ₹
+                  {Math.max(
+                    ...eligibleSchemes.map((s) => s.benefitAmount)
+                  ).toLocaleString()}
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {eligibleSchemes.slice(0, 3).map((scheme) => (
+                    <div
+                      key={scheme._id}
+                      className="bg-white/10 backdrop-blur-sm rounded-lg p-4"
+                    >
+                      <h4 className="font-semibold text-white mb-1">
+                        {scheme.name}
+                      </h4>
+                      <p className="text-green-100 text-sm mb-2">
+                        ₹{scheme.benefitAmount.toLocaleString()}{" "}
+                        {scheme.benefitType}
+                      </p>
+                      <button className="bg-white text-green-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-50 transition-colors">
+                        Apply Now
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                {eligibleSchemes.length > 3 && (
+                  <p className="text-green-100 text-sm mt-3">
+                    + {eligibleSchemes.length - 3} more schemes available
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Dashboard Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
           {/* Weather Alerts */}
@@ -229,17 +305,55 @@ const DashboardPage: React.FC = () => {
               </h3>
             </div>
             <div className="p-6">
-              <p className="text-gray-600 text-sm mb-4">
-                Explore available government benefits and subsidies
-              </p>
-              <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
-                <p className="text-orange-800 text-sm font-medium">
-                  🚀 Coming soon...
-                </p>
-                <p className="text-orange-600 text-xs mt-1">
-                  Stay tuned for updates
-                </p>
-              </div>
+              {schemesLoading ? (
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                  <p className="text-gray-600 text-sm mt-2">
+                    Loading schemes...
+                  </p>
+                </div>
+              ) : schemesError ? (
+                <div className="text-center">
+                  <p className="text-red-600 text-sm">{schemesError}</p>
+                </div>
+              ) : eligibleSchemes.length > 0 ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Gift className="w-5 h-5 text-orange-600" />
+                    <span className="font-semibold text-orange-800">
+                      {eligibleSchemes.length} schemes available
+                    </span>
+                  </div>
+                  <div className="space-y-2 mb-4">
+                    {eligibleSchemes.slice(0, 2).map((scheme) => (
+                      <div
+                        key={scheme._id}
+                        className="p-3 bg-orange-50 rounded-lg border border-orange-200"
+                      >
+                        <h4 className="font-medium text-orange-900 text-sm">
+                          {scheme.name}
+                        </h4>
+                        <p className="text-orange-700 text-xs">
+                          ₹{scheme.benefitAmount.toLocaleString()}{" "}
+                          {scheme.benefitType}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <button className="w-full bg-orange-500 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors">
+                    View All Schemes
+                  </button>
+                </div>
+              ) : (
+                <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+                  <p className="text-orange-800 text-sm font-medium">
+                    📋 No schemes available
+                  </p>
+                  <p className="text-orange-600 text-xs mt-1">
+                    Check back later for updates
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

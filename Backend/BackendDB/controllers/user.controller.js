@@ -1,29 +1,14 @@
 import User from "../models/user.model.js";
-import jwt from "jsonwebtoken";
 
-// Generate JWT Token
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
-};
-
-// Register User
+// Register new user
 export const registerUser = async (req, res) => {
   try {
-    const {
-      name,
-      gender,
-      occupation,
-      cropsGrown,
-      phoneNumber,
-      language,
-      village,
-      district,
-      state,
-      farmSize
-    } = req.body;
-
+    console.log("Received registration data:", req.body);
+    
+    const userData = req.body;
+    
     // Check if user already exists
-    const existingUser = await User.findOne({ phoneNumber });
+    const existingUser = await User.findOne({ phoneNumber: userData.phoneNumber });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -32,89 +17,74 @@ export const registerUser = async (req, res) => {
     }
 
     // Create new user
-    const user = new User({
-      name,
-      gender,
-      occupation,
-      cropsGrown: occupation === "Farmer" ? cropsGrown : undefined,
-      phoneNumber,
-      language,
-      village,
-      district,
-      state,
-      farmSize: occupation === "Farmer" ? farmSize : undefined
-    });
-
+    const user = new User(userData);
     await user.save();
 
-    // Generate token
-    const token = generateToken(user._id);
+    // Convert to object and transform _id to id
+    const userResponse = user.toObject();
+    userResponse.id = userResponse._id.toString();
+    delete userResponse._id;
+    delete userResponse.__v;
 
     res.status(201).json({
       success: true,
       message: "User registered successfully",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        phoneNumber: user.phoneNumber,
-        occupation: user.occupation,
-        village: user.village,
-        district: user.district,
-        state: user.state,
-        gender: user.gender,
-        language: user.language,
-        cropsGrown: user.cropsGrown,
-        farmSize: user.farmSize
-      }
+      user: userResponse,
+      token: "dummy-token-for-now"
     });
+
   } catch (error) {
+    console.error("Registration error:", error);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationErrors,
+        receivedData: req.body
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: error.message
+      message: "Error creating user",
+      error: error.message
     });
   }
 };
 
-// Login User (simplified - just check if user exists)
+// Login user
 export const loginUser = async (req, res) => {
   try {
     const { phoneNumber } = req.body;
 
-    // Find user by phone number
     const user = await User.findOne({ phoneNumber });
     if (!user) {
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
-        message: "User not found with this phone number"
+        message: "User not found. Please register first."
       });
     }
 
-    // Generate token
-    const token = generateToken(user._id);
+    // Convert to object and transform _id to id
+    const userResponse = user.toObject();
+    userResponse.id = userResponse._id.toString();
+    delete userResponse._id;
+    delete userResponse.__v;
 
     res.status(200).json({
       success: true,
       message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        phoneNumber: user.phoneNumber,
-        occupation: user.occupation,
-        village: user.village,
-        district: user.district,
-        state: user.state,
-        gender: user.gender,
-        language: user.language,
-        cropsGrown: user.cropsGrown,
-        farmSize: user.farmSize
-      }
+      user: userResponse,
+      token: "dummy-token-for-now"
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: "Error logging in",
+      error: error.message
     });
   }
 };
