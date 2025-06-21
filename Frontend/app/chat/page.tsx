@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "../../store/authStore"; // Adjust path as needed
+import { useAuthStore } from "../../store/authStore";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -40,7 +40,6 @@ const ChatInterface: React.FC = () => {
   const languageDropdownRef = useRef<HTMLDivElement>(null);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const synthRef = useRef<SpeechSynthesis | null>(null);
 
   // Authentication
   const { user, logout, isAuthenticated } = useAuthStore();
@@ -72,8 +71,7 @@ const ChatInterface: React.FC = () => {
 
     // Update speech recognition language
     if (recognitionRef.current) {
-      recognitionRef.current.lang =
-        languageCode === "hi-IN" ? "hi-IN" : languageCode;
+      recognitionRef.current.lang = languageCode;
     }
   };
 
@@ -138,9 +136,6 @@ const ChatInterface: React.FC = () => {
       };
     }
 
-    // Initialize speech synthesis
-    synthRef.current = window.speechSynthesis;
-
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.abort();
@@ -165,8 +160,6 @@ const ChatInterface: React.FC = () => {
       setIsListening(false);
     }
   };
-
-  
 
   // Function to format message content
   const formatMessageContent = (content: string) => {
@@ -225,18 +218,8 @@ const ChatInterface: React.FC = () => {
     setInputText("");
 
     try {
-      // Determine which API to use based on message content
-      const isMarketPriceQuery =
-        textToSend.toLowerCase().includes("price") ||
-        textToSend.toLowerCase().includes("market") ||
-        textToSend.toLowerCase().includes("cost") ||
-        textToSend.toLowerCase().includes("rate");
-
-      const apiEndpoint = isMarketPriceQuery
-        ? "/api/market-prices"
-        : "/api/chat";
-
-      const response = await fetch(apiEndpoint, {
+      // Single API call - let the backend handle routing
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -268,8 +251,6 @@ const ChatInterface: React.FC = () => {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-
-      
     } catch (error) {
       console.error("Error sending message:", error);
       const errorMessage: ChatMessage = {
@@ -279,9 +260,6 @@ const ChatInterface: React.FC = () => {
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
-
-      // Speak error message if it was a voice input
-      
     } finally {
       setIsLoading(false);
     }
@@ -333,32 +311,9 @@ const ChatInterface: React.FC = () => {
   };
 
   const formatMarketData = (marketData: any) => {
-    if (!marketData || !Array.isArray(marketData) || marketData.length === 0)
-      return null;
-
-    return (
-      <div className="mt-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100">
-        <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
-          <MessageCircle className="w-4 h-4" />
-          Market Prices
-        </h4>
-        <div className="space-y-2">
-          {marketData.slice(0, 5).map((item: any, index: number) => (
-            <div
-              key={index}
-              className="flex justify-between items-center p-2 bg-white rounded-lg"
-            >
-              <span className="font-medium text-gray-800">
-                {item.commodity}
-              </span>
-              <span className="text-green-600 font-semibold">
-                ₹{item.price}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    // Remove the market data display entirely - just return null
+    // The text response already contains the market information
+    return null;
   };
 
   const suggestionButtons = [
@@ -380,7 +335,9 @@ const ChatInterface: React.FC = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-yellow-50 via-white to-green-50 flex flex-col">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-yellow-200 p-4 shadow-sm">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-yellow-200 p-4 shadow-sm relative z-[100]">
+        {" "}
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-yellow-200 p-2 rounded-full">
@@ -411,7 +368,6 @@ const ChatInterface: React.FC = () => {
             >
               Dashboard
             </Link>
-
             {/* Show Profile only if user is logged in */}
             {isAuthenticated && (
               <Link
@@ -443,7 +399,7 @@ const ChatInterface: React.FC = () => {
               </button>
 
               {isLanguageDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm border border-yellow-200 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm border border-yellow-200 rounded-xl shadow-lg z-[9999] max-h-64 overflow-y-auto">
                   <div className="p-2">
                     <div className="text-xs text-gray-500 px-3 py-2 font-medium uppercase tracking-wide">
                       Select Language
@@ -468,7 +424,6 @@ const ChatInterface: React.FC = () => {
                 </div>
               )}
             </div>
-
             {/* Show Login or Logout based on authentication status */}
             {isAuthenticated ? (
               <button
