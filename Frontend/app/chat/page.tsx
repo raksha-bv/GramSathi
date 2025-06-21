@@ -12,8 +12,13 @@ import {
   Droplets,
   Wind,
   MapPin,
+  LogOut,
+  Languages,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "../../store/authStore"; // Adjust path as needed
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -28,12 +33,66 @@ const ChatInterface: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [selectedLanguage, setSelectedLanguage] = useState("en-IN");
   const [userLocation, setUserLocation] = useState<string>("");
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const languageDropdownRef = useRef<HTMLDivElement>(null);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
+
+  // Authentication
+  const { user, logout, isAuthenticated } = useAuthStore();
+  const router = useRouter();
+
+  // Language options
+  const languageOptions = [
+    { code: "en-IN", name: "English" },
+    { code: "hi-IN", name: "Hindi" },
+    { code: "bn-IN", name: "Bengali" },
+    { code: "gu-IN", name: "Gujarati" },
+    { code: "kn-IN", name: "Kannada" },
+    { code: "ml-IN", name: "Malayalam" },
+    { code: "mr-IN", name: "Marathi" },
+    { code: "od-IN", name: "Odia" },
+    { code: "pa-IN", name: "Punjabi" },
+    { code: "ta-IN", name: "Tamil" },
+    { code: "te-IN", name: "Telugu" },
+  ];
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
+  const handleLanguageChange = (languageCode: string) => {
+    setSelectedLanguage(languageCode);
+    setIsLanguageDropdownOpen(false);
+
+    // Update speech recognition language
+    if (recognitionRef.current) {
+      recognitionRef.current.lang =
+        languageCode === "hi-IN" ? "hi-IN" : languageCode;
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        languageDropdownRef.current &&
+        !languageDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsLanguageDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     // Get user location
@@ -60,8 +119,7 @@ const ChatInterface: React.FC = () => {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang =
-        selectedLanguage === "hi" ? "hi-IN" : "en-US";
+      recognitionRef.current.lang = selectedLanguage;
 
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
@@ -108,21 +166,46 @@ const ChatInterface: React.FC = () => {
     }
   };
 
-  const speakText = (text: string) => {
-    if (synthRef.current) {
-      // Stop any current speech
-      synthRef.current.cancel();
+  
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = selectedLanguage === "hi" ? "hi-IN" : "en-US";
-      utterance.rate = 0.9;
-      utterance.volume = 0.8;
+  // Function to format message content
+  const formatMessageContent = (content: string) => {
+    // Remove asterisks and format bold text
+    let formattedContent = content.replace(
+      /\*{2,}([^*]+)\*{2,}/g,
+      "<strong>$1</strong>"
+    );
 
-      // Add a small delay to ensure speech synthesis is ready
-      setTimeout(() => {
-        synthRef.current?.speak(utterance);
-      }, 100);
-    }
+    // Handle numbered lists (1. 2. 3. etc.)
+    formattedContent = formattedContent.replace(
+      /(\d+)\.\s\*\*([^*]+)\*\*:/g,
+      '<div class="mt-3 mb-2"><strong>$1. $2:</strong></div>'
+    );
+
+    // Handle bullet points and general formatting
+    formattedContent = formattedContent.replace(
+      /(\d+)\.\s([^.]+):/g,
+      '<div class="mt-3 mb-2"><strong>$1. $2:</strong></div>'
+    );
+
+    // Handle line breaks and create paragraphs
+    const lines = formattedContent.split("\n").filter((line) => line.trim());
+    const formattedLines = lines.map((line) => {
+      line = line.trim();
+      if (!line) return "";
+
+      // If line starts with number, it's already formatted above
+      if (line.match(/^\d+\./)) {
+        return line;
+      }
+
+      // Format remaining asterisks as bold
+      line = line.replace(/\*+([^*]+)\*+/g, "<strong>$1</strong>");
+
+      return `<div class="mb-2">${line}</div>`;
+    });
+
+    return formattedLines.join("");
   };
 
   const handleSendMessage = async (messageText?: string) => {
@@ -186,10 +269,7 @@ const ChatInterface: React.FC = () => {
 
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // Speak the response (only if it was a voice input)
-      if (messageText && recognitionRef.current) {
-        speakText(data.response);
-      }
+      
     } catch (error) {
       console.error("Error sending message:", error);
       const errorMessage: ChatMessage = {
@@ -201,11 +281,7 @@ const ChatInterface: React.FC = () => {
       setMessages((prev) => [...prev, errorMessage]);
 
       // Speak error message if it was a voice input
-      if (messageText && recognitionRef.current) {
-        speakText(
-          "I'm sorry, I encountered a technical issue. Please try again in a moment."
-        );
-      }
+      
     } finally {
       setIsLoading(false);
     }
@@ -294,6 +370,13 @@ const ChatInterface: React.FC = () => {
     "Irrigation tips",
   ];
 
+  const getCurrentLanguageName = () => {
+    return (
+      languageOptions.find((lang) => lang.code === selectedLanguage)?.name ||
+      "English"
+    );
+  };
+
   return (
     <div className="h-screen bg-gradient-to-br from-yellow-50 via-white to-green-50 flex flex-col">
       {/* Header */}
@@ -310,16 +393,6 @@ const ChatInterface: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            {/* Language Selector */}
-            <select
-              value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-              className="px-3 py-2 bg-white/80 border border-yellow-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300"
-            >
-              <option value="en">English</option>
-              <option value="hi">हिंदी</option>
-            </select>
-
             <Link
               href="/"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
@@ -338,18 +411,81 @@ const ChatInterface: React.FC = () => {
             >
               Dashboard
             </Link>
-            <Link
-              href="/profile"
-              className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
-            >
-              Profile
-            </Link>
-            <Link
-              href="/login"
-              className="bg-yellow-200 hover:bg-[#FFED70] px-6 py-2 rounded-full text-gray-900 font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300"
-            >
-              Log in
-            </Link>
+
+            {/* Show Profile only if user is logged in */}
+            {isAuthenticated && (
+              <Link
+                href="/profile"
+                className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
+              >
+                Profile
+              </Link>
+            )}
+
+            {/* Language Selector */}
+            <div className="relative" ref={languageDropdownRef}>
+              <button
+                onClick={() =>
+                  setIsLanguageDropdownOpen(!isLanguageDropdownOpen)
+                }
+                className="flex items-center gap-2 bg-yellow-100 hover:bg-yellow-200 text-gray-800 px-4 py-2 rounded-full font-medium text-sm shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 border border-yellow-200"
+                title="Select Language"
+              >
+                <Languages className="w-4 h-4" />
+                <span className="hidden sm:inline">
+                  {getCurrentLanguageName()}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    isLanguageDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isLanguageDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm border border-yellow-200 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+                  <div className="p-2">
+                    <div className="text-xs text-gray-500 px-3 py-2 font-medium uppercase tracking-wide">
+                      Select Language
+                    </div>
+                    {languageOptions.map((language) => (
+                      <button
+                        key={language.code}
+                        onClick={() => handleLanguageChange(language.code)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-150 flex items-center justify-between ${
+                          selectedLanguage === language.code
+                            ? "bg-yellow-100 text-yellow-800 font-medium"
+                            : "text-gray-700 hover:bg-yellow-50"
+                        }`}
+                      >
+                        <span>{language.name}</span>
+                        {selectedLanguage === language.code && (
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Show Login or Logout based on authentication status */}
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="bg-red-100 hover:bg-red-200 text-red-700 px-6 py-2 rounded-full font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-yellow-200 hover:bg-[#FFED70] px-6 py-2 rounded-full text-gray-900 font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300"
+              >
+                Log in
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -372,6 +508,13 @@ const ChatInterface: React.FC = () => {
                     and government schemes. Ask me anything about agriculture,
                     health, or rural development. You can type or use voice!
                   </p>
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500 bg-yellow-50 px-4 py-2 rounded-full border border-yellow-200 ">
+                    <Languages className="w-4 h-4" />
+                    <span>
+                      Currently responding in:{" "}
+                      <strong>{getCurrentLanguageName()}</strong>
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-4xl w-full">
@@ -407,7 +550,18 @@ const ChatInterface: React.FC = () => {
                         : "bg-white/80 backdrop-blur-sm text-gray-800 border border-yellow-200 rounded-bl-md"
                     }`}
                   >
-                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    {message.role === "assistant" ? (
+                      <div
+                        className="text-sm leading-relaxed formatted-content"
+                        dangerouslySetInnerHTML={{
+                          __html: formatMessageContent(message.content),
+                        }}
+                      />
+                    ) : (
+                      <p className="text-sm leading-relaxed">
+                        {message.content}
+                      </p>
+                    )}
                     {formatWeatherData(message.weatherData)}
                     {formatMarketData(message.marketData)}
                     <p
@@ -466,7 +620,7 @@ const ChatInterface: React.FC = () => {
                 onKeyPress={(e) =>
                   e.key === "Enter" && !e.shiftKey && handleSendMessage()
                 }
-                placeholder="Ask me about farming, weather, or government schemes... (type or use voice)"
+                placeholder={`Ask me about farming, weather, or government schemes... (responding in ${getCurrentLanguageName()})`}
                 className="flex-1 px-4 py-3 bg-transparent border-none focus:outline-none text-gray-800 placeholder-gray-500"
                 disabled={isLoading}
               />
@@ -497,13 +651,29 @@ const ChatInterface: React.FC = () => {
             {isListening && (
               <div className="mt-2 text-center">
                 <span className="text-sm text-red-600 animate-pulse">
-                  🎤 Listening... Speak now
+                  🎤 Listening... Speak now in {getCurrentLanguageName()}
                 </span>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Add custom CSS for formatted content */}
+      <style jsx global>{`
+        .formatted-content strong {
+          font-weight: 600;
+          color: #374151;
+        }
+
+        .formatted-content div {
+          line-height: 1.6;
+        }
+
+        .formatted-content div:not(:last-child) {
+          margin-bottom: 0.5rem;
+        }
+      `}</style>
     </div>
   );
 };
