@@ -285,7 +285,7 @@ const ChatInterface: React.FC = () => {
               href="/assistant"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
             >
-              Voice AI
+              Assistant
             </Link>
             <Link
               href="/dashboard"

@@ -35,16 +35,16 @@ const Navbar = () => {
             href="/assistant"
             className="text-xl font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
           >
-            Voice AI
+            Assistant
           </Link>
           <Link
-            href="#"
+            href="/dashboard"
             className="text-xl font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
           >
             Dashboard
           </Link>
           <Link
-            href="#"
+            href="/profile"
             className="text-xl font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
           >
             Profile

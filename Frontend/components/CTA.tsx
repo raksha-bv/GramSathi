@@ -2,6 +2,7 @@
 
 import React from "react";
 import { MessageCircle, Mic, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 const CTASection = () => {
   return (
@@ -40,10 +41,10 @@ const CTASection = () => {
                 Type your questions and get instant, detailed responses. Perfect
                 for complex queries and when you need step-by-step guidance.
               </p>
-              <button className="w-full  bg-yellow-200 hover:bg-[#FFED70]  text-gray-900 font-semibold py-4 px-6 rounded-full transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-sm hover:shadow-md">
+              <Link href="/chat" className="w-full  bg-yellow-200 hover:bg-[#FFED70]  text-gray-900 font-semibold py-4 px-6 rounded-full transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-sm hover:shadow-md">
                 <span>Start Chat</span>
                 <ArrowRight className="w-5 h-5" />
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -61,10 +62,10 @@ const CTASection = () => {
                 interaction while working in the field or when reading is
                 difficult.
               </p>
-              <button className="w-full  bg-green-300  hover:bg-green-300/90 text-gray-900 font-semibold py-4 px-6 rounded-full transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-sm hover:shadow-md">
+              <Link href="/assistant" className="w-full  bg-green-300  hover:bg-green-300/90 text-gray-900 font-semibold py-4 px-6 rounded-full transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-sm hover:shadow-md">
                 <span>Try Voice AI</span>
                 <ArrowRight className="w-5 h-5" />
-              </button>
+              </Link>
             </div>
           </div>
         </div>
