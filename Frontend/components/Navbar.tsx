@@ -99,8 +99,10 @@ const Navbar = () => {
 
       {/* Mobile Navigation Menu */}
       {isMenuOpen && (
-        <div className="md:hidden mt-4">
-          <div className="px-2 pt-2 pb-3 space-y-1 bg-white rounded-lg shadow-lg">
+        <div
+          className="md:hidden absolute left-0 top-20 w-full z-50"
+        >
+          <div className="px-2 pt-2 pb-3 space-y-1 bg-white rounded-b-lg shadow-lg border-t border-gray-200">
             <Link
               href="/chat"
               className="block px-4 py-3 text-lg font-semibold text-gray-900 hover:bg-gray-50 hover:text-gray-700 rounded-md transition-all duration-300"
