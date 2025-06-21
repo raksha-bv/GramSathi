@@ -10,6 +10,7 @@ import {
   Instagram,
   Linkedin,
 } from "lucide-react";
+import Link from "next/link";
 
 const Footer = () => {
   return (
@@ -32,30 +33,30 @@ const Footer = () => {
               rural communities across India.
             </p>
             <div className="flex space-x-4">
-              <a
+              <Link
                 href="#"
                 className="text-gray-400 hover:text-yellow-400 transition-colors duration-300"
               >
                 <Facebook className="w-5 h-5" />
-              </a>
-              <a
+              </Link>
+              <Link
                 href="#"
                 className="text-gray-400 hover:text-yellow-400 transition-colors duration-300"
               >
                 <Twitter className="w-5 h-5" />
-              </a>
-              <a
+              </Link>
+              <Link
                 href="#"
                 className="text-gray-400 hover:text-yellow-400 transition-colors duration-300"
               >
                 <Instagram className="w-5 h-5" />
-              </a>
-              <a
+              </Link>
+              <Link
                 href="#"
                 className="text-gray-400 hover:text-yellow-400 transition-colors duration-300"
               >
                 <Linkedin className="w-5 h-5" />
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -64,36 +65,36 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-3">
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="chat"
                   className="text-gray-400 hover:text-white transition-colors duration-300"
                 >
                   Chat
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/assistant"
                   className="text-gray-400 hover:text-white transition-colors duration-300"
                 >
                   Voice AI
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/dashboard"
                   className="text-gray-400 hover:text-white transition-colors duration-300"
                 >
                   Dashboard
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/profile"
                   className="text-gray-400 hover:text-white transition-colors duration-300"
                 >
                   Profile
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
