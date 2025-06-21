@@ -204,11 +204,11 @@ class AppointmentScheduler:
                                 appointment["_id"], 
                                 "failed"
                             )
-            
+        
             except Exception as e:
                 print(f"Error in scheduler loop: {e}")
-        
-        time.sleep(60)  # Check every 60 seconds instead of 10
+            
+            time.sleep(60)  # Check every 60 seconds instead of 10
     
     def get_appointments(self, phone_number: Optional[str] = None) -> List[Dict]:
         """Get appointments from MongoDB"""
