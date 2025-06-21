@@ -1108,7 +1108,7 @@ Please provide a helpful response about the weather with practical farming advic
       console.log("Sending appointment data:", appointmentData);
 
       const response = await fetch(
-        "http://localhost:5000/api/schedule-appointment",
+        "http://localhost:5002/api/schedule-appointment",
         {
           method: "POST",
           headers: {
