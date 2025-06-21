@@ -2,21 +2,36 @@ import json
 import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
-from .twilio_service import TwilioService
-from .mongodb_service import MongoDBService
 import threading
 import time
+from .twilio_service import TwilioService
 import re
 
 class AppointmentScheduler:
     def __init__(self):
         self.twilio_service = TwilioService()
-        self.mongodb_service = MongoDBService()
+        self.appointments_file = "scheduled_appointments.json"
+        self.appointments: List[Dict] = self.load_appointments()
         self.running = False
         self.scheduler_thread = None
-        
-        # Start scheduler immediately
-        self.start_scheduler()
+    
+    def load_appointments(self) -> List[Dict]:
+        """Load appointments from file"""
+        try:
+            if os.path.exists(self.appointments_file):
+                with open(self.appointments_file, 'r') as f:
+                    return json.load(f)
+        except Exception as e:
+            print(f"Error loading appointments: {e}")
+        return []
+    
+    def save_appointments(self):
+        """Save appointments to file"""
+        try:
+            with open(self.appointments_file, 'w') as f:
+                json.dump(self.appointments, f, indent=2)
+        except Exception as e:
+            print(f"Error saving appointments: {e}")
     
     def schedule_appointment_reminder(self, phone_number: str, appointment_datetime: str, appointment_type: str = "gynacologist") -> Dict:
         """Schedule an appointment reminder 1 hour before the appointment"""
@@ -36,6 +51,7 @@ class AppointmentScheduler:
             
             # Create appointment record
             appointment = {
+                "id": f"{phone_number}_{int(time.time())}",
                 "phone_number": phone_number,
                 "appointment_datetime": appointment_time.isoformat(),
                 "reminder_datetime": reminder_time.isoformat(),
@@ -44,9 +60,8 @@ class AppointmentScheduler:
                 "created_at": datetime.now().isoformat()
             }
             
-            # Save to MongoDB
-            appointment_id = self.mongodb_service.insert_appointment(appointment)
-            print(f"Appointment scheduled with ID: {appointment_id}")
+            self.appointments.append(appointment)
+            self.save_appointments()
             
             # Start scheduler if not running
             if not self.running:
@@ -54,14 +69,13 @@ class AppointmentScheduler:
             
             return {
                 "success": True,
-                "appointment_id": appointment_id,
+                "appointment_id": appointment["id"],
                 "appointment_time": appointment_time.isoformat(),
                 "reminder_time": reminder_time.isoformat(),
                 "message": f"Appointment reminder scheduled for {reminder_time.strftime('%Y-%m-%d %H:%M')} (1 hour before your {appointment_type} appointment)"
             }
             
         except Exception as e:
-            print(f"Error scheduling appointment: {e}")
             return {
                 "success": False,
                 "error": str(e)
@@ -167,56 +181,48 @@ class AppointmentScheduler:
             print("Appointment scheduler started")
     
     def _scheduler_loop(self):
-        """Main scheduler loop - checks every 60 seconds"""
-        print("Scheduler loop started")
+        """Main scheduler loop - checks every 30 seconds"""
         while self.running:
             try:
-                # Get pending reminders from MongoDB (only log if found)
-                pending_appointments = self.mongodb_service.get_pending_reminders()
+                now = datetime.now()
                 
-                if pending_appointments:
-                    print(f"Found {len(pending_appointments)} pending appointments")
+                for appointment in self.appointments[:]:
+                    if appointment["status"] != "scheduled":
+                        continue
                     
-                    for appointment in pending_appointments:
+                    reminder_time = datetime.fromisoformat(appointment["reminder_datetime"])
+                    
+                    # Check if it's time for the reminder (within 1 minute window)
+                    if now >= reminder_time and now <= reminder_time + timedelta(minutes=1):
+                        print(f"Making reminder call for appointment: {appointment['id']}")
+                        
                         try:
-                            print(f"Making reminder call to: {appointment['phone_number']} for {appointment['appointment_type']}")
-                            
-                            # Make the reminder call
                             call_sid = self.twilio_service.make_appointment_reminder_call(
                                 appointment["phone_number"],
                                 appointment["appointment_type"]
                             )
                             
-                            if call_sid:
-                                # Update status to 'reminder_sent'
-                                self.mongodb_service.update_appointment_status(
-                                    appointment["_id"], 
-                                    "reminder_sent"
-                                )
-                                print(f"✅ Reminder call made successfully. Call SID: {call_sid}")
-                            else:
-                                print("❌ Call SID is None - call failed")
-                        
+                            appointment["status"] = "called"
+                            appointment["call_sid"] = call_sid
+                            appointment["called_at"] = now.isoformat()
+                            
+                            print(f"Reminder call made successfully: {call_sid}")
+                            
                         except Exception as e:
-                            print(f"❌ Error processing appointment {appointment['_id']}: {e}")
-                            # Update status to 'failed'
-                            self.mongodb_service.update_appointment_status(
-                                appointment["_id"], 
-                                "failed"
-                            )
-        
+                            print(f"Failed to make reminder call: {e}")
+                            appointment["status"] = "failed"
+                            appointment["error"] = str(e)
+                        
+                        self.save_appointments()
+                
+                time.sleep(30)  # Check every 30 seconds
+                
             except Exception as e:
                 print(f"Error in scheduler loop: {e}")
-            
-            time.sleep(60)  # Check every 60 seconds instead of 10
+                time.sleep(60)
     
     def get_appointments(self, phone_number: Optional[str] = None) -> List[Dict]:
-        """Get appointments from MongoDB"""
-        return self.mongodb_service.get_appointments(phone_number=phone_number)
-    
-    def stop_scheduler(self):
-        """Stop the scheduler"""
-        self.running = False
-        if self.scheduler_thread:
-            self.scheduler_thread.join()
-        print("Appointment scheduler stopped")
+        """Get appointments"""
+        if phone_number:
+            return [apt for apt in self.appointments if apt["phone_number"] == phone_number]
+        return self.appointments

@@ -1,5 +1,2 @@
 Flask
 twilio
-python-dotenv
-dotenv
-pymongo
