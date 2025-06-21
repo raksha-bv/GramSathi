@@ -1,0 +1,39 @@
+[
+  {
+    "id": "+917204663202_1750434206",
+    "phone_number": "+917204663202",
+    "appointment_date": "2025-06-21T09:00:00",
+    "appointment_type": "gynacologist",
+    "status": "scheduled",
+    "created_at": "2025-06-20T21:13:26.039631"
+  },
+  {
+    "id": "+917204663202_1750434423",
+    "phone_number": "+917204663202",
+    "appointment_date": "2025-06-20T21:18:00",
+    "appointment_type": "gynacologist",
+    "status": "failed",
+    "created_at": "2025-06-20T21:17:03.714521",
+    "error": "Failed to make appointment reminder call: \n\u001b[31m\u001b[49mHTTP Error\u001b[0m \u001b[37m\u001b[49mYour request was:\u001b[0m\n\n\u001b[36m\u001b[49mPOST /Accounts/ACc3ce8798bff5cc0dc18495331eaab6e6/Calls.json\u001b[0m\n\n\u001b[37m\u001b[49mTwilio returned the following information:\u001b[0m\n\n\u001b[34m\u001b[49mUnable to create record: Url is not a valid URL: http://localhost:5000/api/appointment-twiml?type=gynacologist\u001b[0m\n\n\u001b[37m\u001b[49mMore information may be available here:\u001b[0m\n\n\u001b[34m\u001b[49mhttps://www.twilio.com/docs/errors/21205\u001b[0m\n\n"
+  },
+  {
+    "id": "+917204663202_1750434587",
+    "phone_number": "+917204663202",
+    "appointment_date": "2025-06-20T21:20:00",
+    "appointment_type": "gynacologist",
+    "status": "called",
+    "created_at": "2025-06-20T21:19:47.748047",
+    "call_sid": "CA9ae93bc39d3fd158a5df9f24729fb4f0",
+    "called_at": "2025-06-20T21:20:17.759651"
+  },
+  {
+    "id": "+917204663202_1750434847",
+    "phone_number": "+917204663202",
+    "appointment_date": "2025-06-20T21:25:00",
+    "appointment_type": "gynacologist",
+    "status": "called",
+    "created_at": "2025-06-20T21:24:07.439717",
+    "call_sid": "CA2ca59deb958297051f45702fd715ac59",
+    "called_at": "2025-06-20T21:25:18.837179"
+  }
+]
