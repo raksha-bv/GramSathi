@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
+import Link from "next/link";
 
 const HeroSection = () => {
   const greetings = [
@@ -68,9 +69,9 @@ const HeroSection = () => {
             </p>
           </div>
 
-          <button className="bg-yellow-200 hover:bg-[#FFED70] px-8 py-4 rounded-full text-gray-900 font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-500">
+          <Link href="/chat" className="bg-yellow-200 hover:bg-[#FFED70] px-8 py-4 rounded-full text-gray-900 font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-500">
             Learn more
-          </button>
+          </Link>
         </div>
 
         {/* Right Illustration */}

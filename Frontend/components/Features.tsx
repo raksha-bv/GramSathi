@@ -10,6 +10,7 @@ import {
   Users,
   Sprout,
 } from "lucide-react";
+import Link from "next/link";
 
 const FeaturesSection = () => {
   const features = [
@@ -94,9 +95,9 @@ const FeaturesSection = () => {
 
         {/* Bottom CTA */}
         <div className="text-center mt-12 sm:mt-16">
-          <button className="bg-yellow-300 hover:bg-yellow-400 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-gray-900 font-bold text-base sm:text-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300">
+          <Link href='/chat' className="bg-yellow-300 hover:bg-yellow-400 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-gray-900 font-bold text-base sm:text-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300">
             Get Started
-          </button>
+          </Link>
         </div>
       </div>
     </section>
