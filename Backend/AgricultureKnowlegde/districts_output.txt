@@ -1,0 +1,311 @@
+1: Durg
+2: Bastar
+3: Raipur
+4: Bilaspur
+5: Raigarh
+6: Surguja
+7: Jabalpur
+8: Balaghat
+9: Chhindwara
+10: Narsinghpur
+11: Seoni / Shivani
+12: Mandla
+13: Sagar
+14: Damoh
+15: Tikamgarh
+16: Chhatarpur
+17: Panna
+18: Rewa
+19: Sidhi
+20: Satna
+21: Shahdol
+22: Gwalior
+23: Shivpuri
+24: Guna
+25: Datia
+26: Morena
+27: Bhind
+28: Indore
+29: Ratlam
+30: Ujjain
+31: Mandsaur
+32: Dewas
+33: Dhar
+34: Jhabua
+35: Khargone / West Nimar
+36: Khandwa / East Nimar
+37: Sehore
+38: Raisen
+39: Vidisha
+40: Betul
+41: Rajgarh
+42: Shajapur
+43: Hoshangabad
+44: Srikakulam
+45: Visakhapatnam
+46: East Godavari
+47: West Godavari
+48: Krishna
+49: Guntur
+50: S.P.S. Nellore
+51: Kurnool
+52: Ananthapur
+53: Kadapa YSR
+54: Chittoor
+55: Hyderabad
+56: Nizamabad
+57: Medak
+58: Mahabubnagar
+59: Nalgonda
+60: Warangal
+61: Khammam
+62: Karimnagar
+63: Adilabad
+64: Bangalore
+65: Kolar
+66: Tumkur
+67: Mysore
+68: Mandya
+69: Hassan
+70: Shimoge
+71: Chickmagalur
+72: Chitradurga
+73: Bellary
+74: Dharwad
+75: Belgaum
+76: Bijapur / Vijayapura
+77: Bidar
+78: Raichur
+79: Gulbarga / Kalaburagi
+80: Dakshina Kannada
+81: Uttara Kannada
+82: Kodagu / Coorg
+83: Chengalpattu MGR / Kanchipuram
+84: South Arcot / Cuddalore
+85: North Arcot / Vellore
+86: Salem
+87: Coimbatore
+88: Tiruchirapalli / Trichy
+89: Thanjavur
+90: Madurai
+91: Ramananthapuram
+92: Thirunelveli
+93: The Nilgiris
+94: Kanyakumari
+95: Bombay
+96: Thane
+97: Raigad
+98: Ratnagiri
+99: Nasik
+100: Dhule
+101: Jalgaon
+102: Ahmednagar
+103: Pune
+104: Satara
+105: Sangli
+106: Solapur
+107: Kolhapur
+108: Aurangabad
+109: Parbhani
+110: Beed
+111: Nanded
+112: Osmanabad
+113: Buldhana
+114: Akola
+115: Amarawati
+116: Yeotmal
+117: Wardha
+118: Nagpur
+119: Bhandara
+120: Chandrapur
+121: Ahmedabad
+122: Amreli
+123: Banaskantha
+124: Bharuch
+125: Vadodara / Baroda
+126: Bhavnagar
+127: Valsad
+128: Dangs
+129: Jamnagar
+130: Junagadh
+131: Kheda
+132: Kutch
+133: Mehsana
+134: Panchmahal
+135: Rajkot
+136: Sabarkantha
+137: Surat
+138: Surendranagar
+139: Ajmer
+140: Alwar
+141: Banswara
+142: Barmer
+143: Bharatpur
+144: Bhilwara
+145: Bikaner
+146: Bundi
+147: Chittorgarh
+148: Churu
+149: Dungarpur
+150: Ganganagar
+151: Jaipur
+152: Jaisalmer
+153: Jalore
+154: Jhalawar
+155: Jhunjhunu
+156: Jodhpur
+157: Kota
+158: Nagaur
+159: Pali
+160: Swami Madhopur
+161: Sikar
+162: Sirohi
+163: Tonk
+164: Udaipur
+165: Gurdaspur
+166: Amritsar
+167: Kapurthala
+168: Jalandhar
+169: Hoshiarpur
+170: Roopnagar / Ropar
+171: Ludhiana
+172: Ferozpur
+174: Bhatinda
+175: Sangrur
+176: Patiala
+177: Hissar
+180: Gurgaon
+181: Jind
+182: Mahendragarh / Narnaul
+183: Ambala
+184: Karnal
+186: Rohtak
+189: Saharanpur
+190: Muzaffarnagar
+191: Meerut
+192: Buland Shahar
+194: Aligarh
+195: Mathura
+196: Agra
+197: Mainpuri
+198: Etah
+199: Bareilly
+200: Budaun
+201: Moradabad
+202: Shahjahanpur
+203: Pilibhit
+204: Rampur
+205: Bijnor
+206: Farrukhabad
+207: Etawah
+208: Kanpur
+209: Fatehpur
+210: Allahabad
+211: Jhansi
+213: Jalaun
+214: Hamirpur
+215: Banda
+216: Varanasi
+217: Mirzpur
+218: Jaunpur
+219: Ghazipur
+220: Ballia
+221: Gorakhpur
+222: Deoria
+223: Basti
+224: Azamgarh
+225: Lucknow
+226: Unnao
+227: Rae-Bareily
+228: Sitapur
+229: Hardoi
+230: Kheri
+231: Faizabad
+232: Gonda
+233: Bahraich
+234: Sultanpur
+235: Pratapgarh
+236: Barabanki
+237: Nainital
+238: Almorah
+239: Pithorgarh
+240: Chamoli
+241: Uttar Kashi
+242: Tehri Garhwal
+243: Garhwal
+244: Dehradun
+601: Cachar
+602: Darrang
+603: Dibrugarh
+604: Goalpara
+605: Kamrup
+606: Karbi Anglong
+607: Lakhimpur
+608: North Cachar Hil / Dima hasao
+609: Nagaon
+610: Sibsagar
+626: Bilashpur
+627: Chamba
+629: Kangra
+630: Kinnaur
+631: Kullu
+632: Lahul & Spiti
+633: Solan
+634: Mandi
+635: Shimla
+636: Sirmaur
+651: Alappuzha
+652: Kannur
+653: Eranakulam
+655: Kottayam
+656: Kozhikode
+657: Malappuram
+658: Palakkad
+659: Kollam
+660: Thrissur
+661: Thiruvananthapuram
+701: Balasore
+702: Bolangir
+703: Cuttack
+704: Dhenkanal
+705: Ganjam
+706: Kalahandi
+707: Keonjhar
+708: Koraput
+709: Mayurbhanja
+710: Phulbani ( Kandhamal )
+711: Puri
+712: Sambalpur
+713: Sundargarh
+800: 24 Parganas
+803: Nadia
+804: Murshidabad
+805: Burdwan
+806: Birbhum
+807: Bankura
+810: Hooghly
+811: Howrah
+812: Jalpaiguri
+813: Darjeeling
+814: Malda
+816: Cooch Behar
+817: Purulia
+818: Midnapur
+822: West Dinajpur
+901: Champaran
+902: Muzaffarpur
+903: Darbhanga
+904: Saharsa
+905: Purnea
+906: Saran
+907: Patna
+908: Mungair
+909: Bhagalpur
+910: Santhal Paragana / Dumka
+911: Shahabad (now part of Bhojpur district)
+912: Gaya
+913: Hazaribagh
+914: Dhanbad
+915: Palamau
+916: Ranchi
+917: Singhbhum
