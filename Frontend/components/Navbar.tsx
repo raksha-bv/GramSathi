@@ -1,14 +1,23 @@
 "use client";
 
 import React, { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "../store/authStore"; // Adjust path as needed
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout, isAuthenticated } = useAuthStore();
+  const router = useRouter();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
   };
 
   return (
@@ -26,7 +35,7 @@ const Navbar = () => {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8">
           <Link
-            href="chat"
+            href="/chat"
             className="text-xl font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
           >
             Chat
@@ -43,15 +52,34 @@ const Navbar = () => {
           >
             Dashboard
           </Link>
-          <Link
-            href="/profile"
-            className="text-xl font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
-          >
-            Profile
-          </Link>
-          <Link href="/login" className="bg-yellow-200 hover:bg-[#FFED70] px-8 py-3 rounded-full text-gray-900 font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300">
-            Log in
-          </Link>
+
+          {/* Show Profile only if user is logged in */}
+          {isAuthenticated && (
+            <Link
+              href="/profile"
+              className="text-xl font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
+            >
+              Profile
+            </Link>
+          )}
+
+          {/* Show Login or Logout based on authentication status */}
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="bg-red-100 hover:bg-red-200 text-red-700 px-6 py-3 rounded-full font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="bg-yellow-200 hover:bg-[#FFED70] px-8 py-3 rounded-full text-gray-900 font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300"
+            >
+              Log in
+            </Link>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -73,33 +101,60 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="md:hidden mt-4">
           <div className="px-2 pt-2 pb-3 space-y-1 bg-white rounded-lg shadow-lg">
-            <a
-              href="#"
+            <Link
+              href="/chat"
               className="block px-4 py-3 text-lg font-semibold text-gray-900 hover:bg-gray-50 hover:text-gray-700 rounded-md transition-all duration-300"
+              onClick={() => setIsMenuOpen(false)}
             >
               Chat
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/assistant"
               className="block px-4 py-3 text-lg font-semibold text-gray-900 hover:bg-gray-50 hover:text-gray-700 rounded-md transition-all duration-300"
+              onClick={() => setIsMenuOpen(false)}
             >
-              Voice AI
-            </a>
-            <a
-              href="#"
+              Assistant
+            </Link>
+            <Link
+              href="/dashboard"
               className="block px-4 py-3 text-lg font-semibold text-gray-900 hover:bg-gray-50 hover:text-gray-700 rounded-md transition-all duration-300"
+              onClick={() => setIsMenuOpen(false)}
             >
               Dashboard
-            </a>
-            <a
-              href="#"
-              className="block px-4 py-3 text-lg font-semibold text-gray-900 hover:bg-gray-50 hover:text-gray-700 rounded-md transition-all duration-300"
-            >
-              Profile
-            </a>
-            <button className="w-full mt-2 bg-yellow-200 hover:bg-[#FFED70] px-6 py-3 rounded-full text-gray-900 font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300">
-              Log in
-            </button>
+            </Link>
+
+            {/* Show Profile only if user is logged in */}
+            {isAuthenticated && (
+              <Link
+                href="/profile"
+                className="block px-4 py-3 text-lg font-semibold text-gray-900 hover:bg-gray-50 hover:text-gray-700 rounded-md transition-all duration-300"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Profile
+              </Link>
+            )}
+
+            {/* Show Login or Logout based on authentication status */}
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsMenuOpen(false);
+                }}
+                className="w-full mt-2 bg-red-100 hover:bg-red-200 text-red-700 px-6 py-3 rounded-full font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="block w-full mt-2 bg-yellow-200 hover:bg-[#FFED70] px-6 py-3 rounded-full text-gray-900 font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 text-center"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Log in
+              </Link>
+            )}
           </div>
         </div>
       )}
