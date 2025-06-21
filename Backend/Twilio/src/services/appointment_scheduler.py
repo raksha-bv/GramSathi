@@ -171,12 +171,20 @@ class AppointmentScheduler:
         print("Scheduler loop started")
         while self.running:
             try:
+                current_time = datetime.now()
+                print(f"Scheduler check at: {current_time.isoformat()}")
+                
                 # Get pending reminders from MongoDB
                 pending_appointments = self.mongodb_service.get_pending_reminders()
+                print(f"Found {len(pending_appointments)} pending appointments")
                 
                 for appointment in pending_appointments:
+                    print(f"Processing appointment: {appointment}")
+                    reminder_time = datetime.fromisoformat(appointment['reminder_datetime'])
+                    print(f"Reminder time: {reminder_time}, Current time: {current_time}")
+                    
                     try:
-                        print(f"Processing reminder for appointment: {appointment['_id']}")
+                        print(f"Making call to: {appointment['phone_number']}")
                         
                         # Make the reminder call
                         call_sid = self.twilio_service.make_appointment_reminder_call(
@@ -191,6 +199,8 @@ class AppointmentScheduler:
                                 "reminder_sent"
                             )
                             print(f"Reminder call made successfully. Call SID: {call_sid}")
+                        else:
+                            print("Call SID is None - call failed")
                         
                     except Exception as e:
                         print(f"Error processing appointment {appointment['_id']}: {e}")
@@ -199,11 +209,11 @@ class AppointmentScheduler:
                             appointment["_id"], 
                             "failed"
                         )
-                
+            
             except Exception as e:
                 print(f"Error in scheduler loop: {e}")
-            
-            time.sleep(10)  # Check every 10 seconds
+        
+        time.sleep(10)  # Check every 10 seconds
     
     def get_appointments(self, phone_number: Optional[str] = None) -> List[Dict]:
         """Get appointments from MongoDB"""
