@@ -256,10 +256,10 @@ const LoginPage: React.FC = () => {
                     {[
                       "Rice",
                       "Wheat",
-                      "Corn",
-                      "Cotton",
-                      "Sugarcane",
-                      "Vegetables",
+                      "Maize",
+                      "Potato",
+                      "Tomato",
+                      "Onion",
                     ].map((crop) => (
                       <label key={crop} className="flex items-center space-x-2">
                         <input

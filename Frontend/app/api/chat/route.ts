@@ -42,6 +42,9 @@ export async function POST(request: NextRequest) {
       response: translatedResponse,
       originalResponse: result.response,
       weatherData: result.weatherData,
+      marketData: result.marketData,
+      appointmentScheduled: result.appointmentScheduled,
+      needsAppointmentInfo: result.needsAppointmentInfo,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

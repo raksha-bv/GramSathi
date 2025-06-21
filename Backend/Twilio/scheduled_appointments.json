@@ -38,5 +38,72 @@
     "status": "failed",
     "created_at": "2025-06-20T22:33:18.030234",
     "error": "Failed to make appointment reminder call: \n\u001b[31m\u001b[49mHTTP Error\u001b[0m \u001b[37m\u001b[49mYour request was:\u001b[0m\n\n\u001b[36m\u001b[49mPOST /Accounts/ACc3ce8798bff5cc0dc18495331eaab6e6/Calls.json\u001b[0m\n\n\u001b[37m\u001b[49mTwilio returned the following information:\u001b[0m\n\n\u001b[34m\u001b[49mUnable to create record: The number +917870295723 is unverified. Trial accounts may only make calls to verified numbers.\u001b[0m\n\n\u001b[37m\u001b[49mMore information may be available here:\u001b[0m\n\n\u001b[34m\u001b[49mhttps://www.twilio.com/docs/errors/21219\u001b[0m\n\n"
+  },
+  {
+    "id": "+917204663202_1750528725",
+    "phone_number": "+917204663202",
+    "appointment_datetime": "2025-06-22T00:30:00",
+    "reminder_datetime": "2025-06-21T23:30:00",
+    "appointment_type": "gynacologist",
+    "status": "called",
+    "created_at": "2025-06-21T23:28:45.442024",
+    "call_sid": "CAea074504edc23d4c509773781eaf12a1",
+    "called_at": "2025-06-21T23:30:15.470918"
+  },
+  {
+    "id": "+917204663202_1750530668",
+    "phone_number": "+917204663202",
+    "appointment_datetime": "2025-06-23T01:02:00",
+    "reminder_datetime": "2025-06-23T00:02:00",
+    "appointment_type": "gynacologist",
+    "status": "scheduled",
+    "created_at": "2025-06-22T00:01:08.463849"
+  },
+  {
+    "id": "+917204663202_1750530989",
+    "phone_number": "+917204663202",
+    "appointment_datetime": "2025-06-23T19:38:00",
+    "reminder_datetime": "2025-06-23T18:38:00",
+    "appointment_type": "gynacologist",
+    "status": "scheduled",
+    "created_at": "2025-06-22T00:06:29.569035"
+  },
+  {
+    "id": "+917204663202_1750531483",
+    "phone_number": "+917204663202",
+    "appointment_datetime": "2025-06-23T19:46:00",
+    "reminder_datetime": "2025-06-23T18:46:00",
+    "appointment_type": "gynacologist",
+    "status": "scheduled",
+    "created_at": "2025-06-22T00:14:43.835869"
+  },
+  {
+    "id": "+917204663202_1750531697",
+    "phone_number": "+917204663202",
+    "appointment_datetime": "2025-06-23T01:20:00",
+    "reminder_datetime": "2025-06-23T00:20:00",
+    "appointment_type": "gynacologist",
+    "status": "scheduled",
+    "created_at": "2025-06-22T00:18:17.859552"
+  },
+  {
+    "id": "+917204663202_1750531715",
+    "phone_number": "+917204663202",
+    "appointment_datetime": "2025-06-23T01:20:00",
+    "reminder_datetime": "2025-06-23T00:20:00",
+    "appointment_type": "gynacologist",
+    "status": "scheduled",
+    "created_at": "2025-06-22T00:18:35.260174"
+  },
+  {
+    "id": "+917204663202_1750532044",
+    "phone_number": "+917204663202",
+    "appointment_datetime": "2025-06-22T01:25:00",
+    "reminder_datetime": "2025-06-22T00:25:00",
+    "appointment_type": "gynacologist",
+    "status": "called",
+    "created_at": "2025-06-22T00:24:04.293552",
+    "call_sid": "CA4921cf293f0d330bfe756b0698affd06",
+    "called_at": "2025-06-22T00:25:08.944377"
   }
 ]
