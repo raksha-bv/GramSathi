@@ -15,12 +15,11 @@ import {
   LogOut,
   Languages,
   ChevronDown,
-  Menu,
-  X,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "../../store/authStore";
+import { useAuthStore } from "../../store/authStore"; // Adjust path as needed
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -38,11 +37,11 @@ const ChatInterface: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState("en-IN");
   const [userLocation, setUserLocation] = useState<string>("");
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(null);
 
   // Authentication
   const { user, logout, isAuthenticated } = useAuthStore();
@@ -74,11 +73,12 @@ const ChatInterface: React.FC = () => {
 
     // Update speech recognition language
     if (recognitionRef.current) {
-      recognitionRef.current.lang = languageCode;
+      recognitionRef.current.lang =
+        languageCode === "hi-IN" ? "hi-IN" : languageCode;
     }
   };
 
-  // Close dropdowns when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -139,6 +139,9 @@ const ChatInterface: React.FC = () => {
       };
     }
 
+    // Initialize speech synthesis
+    synthRef.current = window.speechSynthesis;
+
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.abort();
@@ -164,10 +167,60 @@ const ChatInterface: React.FC = () => {
     }
   };
 
+  // Function to extract links and replace them with apply buttons
+  const extractLinksAndFormat = (content: string) => {
+    const links: Array<{ url: string; text: string }> = [];
+
+    // Regular expressions to match different link formats
+    const urlRegexes = [
+      /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi, // Standard URLs
+      /www\.[^\s<>"{}|\\^`[\]]+/gi, // www. URLs
+      /\[([^\]]+)\]\(([^)]+)\)/gi, // Markdown links
+    ];
+
+    let processedContent = content;
+
+    // Extract markdown links first
+    let markdownMatch;
+    const markdownRegex = /\[([^\]]+)\]\(([^)]+)\)/gi;
+    while ((markdownMatch = markdownRegex.exec(content)) !== null) {
+      const linkText = markdownMatch[1];
+      const linkUrl = markdownMatch[2];
+
+      // Ensure URL has protocol
+      const fullUrl = linkUrl.startsWith("http")
+        ? linkUrl
+        : `https://${linkUrl}`;
+
+      links.push({ url: fullUrl, text: linkText });
+      processedContent = processedContent.replace(markdownMatch[0], "");
+    }
+
+    // Extract regular URLs
+    urlRegexes.slice(0, 2).forEach((regex) => {
+      let match;
+      while ((match = regex.exec(processedContent)) !== null) {
+        let url = match[0];
+
+        // Ensure URL has protocol
+        if (!url.startsWith("http")) {
+          url = `https://${url}`;
+        }
+
+        links.push({ url, text: url });
+        processedContent = processedContent.replace(match[0], "");
+      }
+    });
+
+    return { content: processedContent.trim(), links };
+  };
+
   // Function to format message content
   const formatMessageContent = (content: string) => {
+    const { content: cleanContent, links } = extractLinksAndFormat(content);
+
     // Remove asterisks and format bold text
-    let formattedContent = content.replace(
+    let formattedContent = cleanContent.replace(
       /\*{2,}([^*]+)\*{2,}/g,
       "<strong>$1</strong>"
     );
@@ -201,7 +254,7 @@ const ChatInterface: React.FC = () => {
       return `<div class="mb-2">${line}</div>`;
     });
 
-    return formattedLines.join("");
+    return { formattedContent: formattedLines.join(""), links };
   };
 
   const handleSendMessage = async (messageText?: string) => {
@@ -221,8 +274,18 @@ const ChatInterface: React.FC = () => {
     setInputText("");
 
     try {
-      // Single API call - let the backend handle routing
-      const response = await fetch("/api/chat", {
+      // Determine which API to use based on message content
+      const isMarketPriceQuery =
+        textToSend.toLowerCase().includes("price") ||
+        textToSend.toLowerCase().includes("market") ||
+        textToSend.toLowerCase().includes("cost") ||
+        textToSend.toLowerCase().includes("rate");
+
+      const apiEndpoint = isMarketPriceQuery
+        ? "/api/market-prices"
+        : "/api/chat";
+
+      const response = await fetch(apiEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -263,6 +326,8 @@ const ChatInterface: React.FC = () => {
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
+
+      // Speak error message if it was a voice input
     } finally {
       setIsLoading(false);
     }
@@ -272,40 +337,40 @@ const ChatInterface: React.FC = () => {
     if (!weatherData || !weatherData.current) return null;
 
     return (
-      <div className="mt-4 p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
-        <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
+      <div className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
+        <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
           <Cloud className="w-4 h-4" />
           Weather Information
         </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
+        <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="flex items-center gap-2">
-            <Sun className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 flex-shrink-0" />
+            <Sun className="w-4 h-4 text-yellow-500" />
             <span>
               <strong>Temperature:</strong> {weatherData.current.temp_c}°C
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Cloud className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0" />
+            <Cloud className="w-4 h-4 text-gray-500" />
             <span>
               <strong>Condition:</strong> {weatherData.current.condition.text}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Droplets className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
+            <Droplets className="w-4 h-4 text-blue-500" />
             <span>
               <strong>Humidity:</strong> {weatherData.current.humidity}%
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Wind className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+            <Wind className="w-4 h-4 text-gray-400" />
             <span>
               <strong>Wind:</strong> {weatherData.current.wind_kph} km/h
             </span>
           </div>
         </div>
         {weatherData.location && (
-          <div className="mt-2 flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+          <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+            <MapPin className="w-4 h-4" />
             <span>{weatherData.location.name}</span>
           </div>
         )}
@@ -314,9 +379,32 @@ const ChatInterface: React.FC = () => {
   };
 
   const formatMarketData = (marketData: any) => {
-    // Remove the market data display entirely - just return null
-    // The text response already contains the market information
-    return null;
+    if (!marketData || !Array.isArray(marketData) || marketData.length === 0)
+      return null;
+
+    return (
+      <div className="mt-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100">
+        <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+          <MessageCircle className="w-4 h-4" />
+          Market Prices
+        </h4>
+        <div className="space-y-2">
+          {marketData.slice(0, 5).map((item: any, index: number) => (
+            <div
+              key={index}
+              className="flex justify-between items-center p-2 bg-white rounded-lg"
+            >
+              <span className="font-medium text-gray-800">
+                {item.commodity}
+              </span>
+              <span className="text-green-600 font-semibold">
+                ₹{item.price}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   const suggestionButtons = [
@@ -335,27 +423,26 @@ const ChatInterface: React.FC = () => {
     );
   };
 
+  const handleApplyClick = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="h-screen bg-gradient-to-br from-yellow-50 via-white to-green-50 flex flex-col">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-yellow-200 p-3 sm:p-4 shadow-sm relative z-[100]">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-yellow-200 p-4 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="bg-yellow-200 p-1.5 sm:p-2 rounded-full">
-              <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
+          <div className="flex items-center gap-3">
+            <div className="bg-yellow-200 p-2 rounded-full">
+              <Bot className="w-6 h-6 text-gray-800" />
             </div>
             <div>
-              <h1 className="text-lg sm:text-2xl font-bold text-gray-900">
-                GramSathi AI
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">
-                Your Rural Assistant
-              </p>
+              <h1 className="text-2xl font-bold text-gray-900">GramSathi AI</h1>
+              <p className="text-sm text-gray-600">Your Rural Assistant</p>
             </div>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-6">
+          <div className="flex items-center gap-6">
             <Link
               href="/"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105"
@@ -374,6 +461,8 @@ const ChatInterface: React.FC = () => {
             >
               Dashboard
             </Link>
+
+            {/* Show Profile only if user is logged in */}
             {isAuthenticated && (
               <Link
                 href="/profile"
@@ -389,11 +478,13 @@ const ChatInterface: React.FC = () => {
                 onClick={() =>
                   setIsLanguageDropdownOpen(!isLanguageDropdownOpen)
                 }
-                className="flex items-center gap-2 bg-yellow-100 hover:bg-yellow-200 text-gray-800 px-3 py-2 rounded-full font-medium text-sm shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 border border-yellow-200"
+                className="flex items-center gap-2 bg-yellow-100 hover:bg-yellow-200 text-gray-800 px-4 py-2 rounded-full font-medium text-sm shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 border border-yellow-200"
                 title="Select Language"
               >
                 <Languages className="w-4 h-4" />
-                <span>{getCurrentLanguageName()}</span>
+                <span className="hidden sm:inline">
+                  {getCurrentLanguageName()}
+                </span>
                 <ChevronDown
                   className={`w-4 h-4 transition-transform duration-200 ${
                     isLanguageDropdownOpen ? "rotate-180" : ""
@@ -402,7 +493,7 @@ const ChatInterface: React.FC = () => {
               </button>
 
               {isLanguageDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm border border-yellow-200 rounded-xl shadow-lg z-[9999] max-h-64 overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm border border-yellow-200 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
                   <div className="p-2">
                     <div className="text-xs text-gray-500 px-3 py-2 font-medium uppercase tracking-wide">
                       Select Language
@@ -428,10 +519,11 @@ const ChatInterface: React.FC = () => {
               )}
             </div>
 
+            {/* Show Login or Logout based on authentication status */}
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
-                className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-full font-semibold text-sm shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                className="bg-red-100 hover:bg-red-200 text-red-700 px-6 py-2 rounded-full font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Logout
@@ -439,169 +531,48 @@ const ChatInterface: React.FC = () => {
             ) : (
               <Link
                 href="/login"
-                className="bg-yellow-200 hover:bg-[#FFED70] px-4 py-2 rounded-full text-gray-900 font-semibold text-sm shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300"
+                className="bg-yellow-200 hover:bg-[#FFED70] px-6 py-2 rounded-full text-gray-900 font-semibold text-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300"
               >
                 Log in
               </Link>
             )}
           </div>
-
-          {/* Mobile Menu Button and Language Selector */}
-          <div className="flex items-center gap-2 lg:hidden">
-            {/* Mobile Language Selector */}
-            <div className="relative" ref={languageDropdownRef}>
-              <button
-                onClick={() =>
-                  setIsLanguageDropdownOpen(!isLanguageDropdownOpen)
-                }
-                className="flex items-center gap-1 bg-yellow-100 hover:bg-yellow-200 text-gray-800 px-2 py-1.5 rounded-full font-medium text-xs shadow-sm transition-all duration-300 border border-yellow-200 min-w-0"
-                title="Select Language"
-              >
-                <Languages className="w-3 h-3 flex-shrink-0" />
-                <span className="hidden xs:inline text-xs">
-                  {getCurrentLanguageName()}
-                </span>
-                <ChevronDown
-                  className={`w-3 h-3 transition-transform duration-200 flex-shrink-0 ${
-                    isLanguageDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {isLanguageDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white/95 backdrop-blur-sm border border-yellow-200 rounded-xl shadow-lg z-[9999] max-h-60 overflow-y-auto">
-                  <div className="p-2">
-                    <div className="text-xs text-gray-500 px-3 py-2 font-medium uppercase tracking-wide">
-                      Language
-                    </div>
-                    {languageOptions.map((language) => (
-                      <button
-                        key={language.code}
-                        onClick={() => handleLanguageChange(language.code)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-150 flex items-center justify-between ${
-                          selectedLanguage === language.code
-                            ? "bg-yellow-100 text-yellow-800 font-medium"
-                            : "text-gray-700 hover:bg-yellow-50"
-                        }`}
-                      >
-                        <span>{language.name}</span>
-                        {selectedLanguage === language.code && (
-                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 text-gray-700 hover:text-gray-900 hover:bg-yellow-100 rounded-full transition-colors"
-            >
-              {isMobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
-            </button>
-          </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-yellow-200 shadow-lg z-[90]">
-            <div className="p-4 space-y-3">
-              <Link
-                href="/"
-                className="block text-lg font-semibold text-gray-900 hover:text-gray-700 py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Home
-              </Link>
-              <Link
-                href="/assistant"
-                className="block text-lg font-semibold text-gray-900 hover:text-gray-700 py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Assistant
-              </Link>
-              <Link
-                href="/dashboard"
-                className="block text-lg font-semibold text-gray-900 hover:text-gray-700 py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
-              {isAuthenticated && (
-                <Link
-                  href="/profile"
-                  className="block text-lg font-semibold text-gray-900 hover:text-gray-700 py-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Profile
-                </Link>
-              )}
-              <div className="pt-2 border-t border-yellow-200">
-                {isAuthenticated ? (
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="w-full bg-red-100 hover:bg-red-200 text-red-700 px-4 py-3 rounded-full font-semibold text-lg shadow-sm flex items-center gap-2 justify-center"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
-                ) : (
-                  <Link
-                    href="/login"
-                    className="block w-full bg-yellow-200 hover:bg-[#FFED70] px-4 py-3 rounded-full text-gray-900 font-semibold text-lg shadow-sm text-center"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Log in
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Chat Area */}
       <div className="flex-1 overflow-hidden">
-        <div className="h-full max-w-6xl mx-auto p-2 sm:p-4 flex flex-col">
-          <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4">
+        <div className="h-full max-w-6xl mx-auto p-4 flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-6 pb-4">
             {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center space-y-6 sm:space-y-8 px-4">
+              <div className="h-full flex flex-col items-center justify-center text-center space-y-8">
                 <div className="space-y-4">
-                  <div className="bg-yellow-200 p-3 sm:p-4 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mx-auto">
-                    <MessageCircle className="w-8 h-8 sm:w-10 sm:h-10 text-gray-800" />
+                  <div className="bg-yellow-200 p-4 rounded-full w-20 h-20 flex items-center justify-center mx-auto">
+                    <MessageCircle className="w-10 h-10 text-gray-800" />
                   </div>
-                  <h2 className="text-xl sm:text-3xl font-bold text-gray-900">
+                  <h2 className="text-3xl font-bold text-gray-900">
                     Welcome to GramSathi!
                   </h2>
-                  <p className="text-sm sm:text-lg text-gray-600 max-w-2xl leading-relaxed">
+                  <p className="text-lg text-gray-600 max-w-2xl">
                     I'm your AI assistant for farming advice, weather updates,
                     and government schemes. Ask me anything about agriculture,
                     health, or rural development. You can type or use voice!
                   </p>
-                  <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-gray-500 bg-yellow-50 px-3 sm:px-4 py-2 rounded-full border border-yellow-200">
-                    <Languages className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="text-center">
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500 bg-yellow-50 px-4 py-2 rounded-full border border-yellow-200 ">
+                    <Languages className="w-4 h-4" />
+                    <span>
                       Currently responding in:{" "}
                       <strong>{getCurrentLanguageName()}</strong>
                     </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 max-w-4xl w-full">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-4xl w-full">
                   {suggestionButtons.map((suggestion, index) => (
                     <button
                       key={index}
                       onClick={() => handleSendMessage(suggestion)}
-                      className="p-3 sm:p-4 bg-white/80 backdrop-blur-sm border border-yellow-200 rounded-xl text-xs sm:text-sm font-medium text-gray-700 hover:bg-yellow-100 hover:border-yellow-300 transition-all duration-200 transform hover:scale-105 shadow-sm min-h-[3rem] sm:min-h-[4rem] flex items-center justify-center text-center"
+                      className="p-4 bg-white/80 backdrop-blur-sm border border-yellow-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-yellow-100 hover:border-yellow-300 transition-all duration-200 transform hover:scale-105 shadow-sm"
                     >
                       {suggestion}
                     </button>
@@ -609,60 +580,97 @@ const ChatInterface: React.FC = () => {
                 </div>
               </div>
             ) : (
-              messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex gap-2 sm:gap-3 ${
-                    message.role === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  {message.role === "assistant" && (
-                    <div className="bg-yellow-200 p-1.5 sm:p-2 rounded-full h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center flex-shrink-0">
-                      <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-gray-800" />
-                    </div>
-                  )}
+              messages.map((message, index) => {
+                let formattedData: {
+                  formattedContent: string;
+                  links: { url: string; text: string }[];
+                } = {
+                  formattedContent: message.content,
+                  links: [],
+                };
+                if (message.role === "assistant") {
+                  formattedData = formatMessageContent(message.content);
+                }
 
+                return (
                   <div
-                    className={`max-w-[85%] sm:max-w-2xl px-3 sm:px-6 py-3 sm:py-4 rounded-2xl ${
-                      message.role === "user"
-                        ? "bg-white/80 backdrop-blur-sm text-gray-800 border border-yellow-200 rounded-bl-md"
-                        : "bg-white/80 backdrop-blur-sm text-gray-800 border border-yellow-200 rounded-bl-md"
+                    key={index}
+                    className={`flex gap-3 ${
+                      message.role === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
-                    {message.role === "assistant" ? (
-                      <div
-                        className="text-xs sm:text-sm leading-relaxed formatted-content"
-                        dangerouslySetInnerHTML={{
-                          __html: formatMessageContent(message.content),
-                        }}
-                      />
-                    ) : (
-                      <p className="text-xs sm:text-sm leading-relaxed">
-                        {message.content}
-                      </p>
+                    {message.role === "assistant" && (
+                      <div className="bg-yellow-200 p-2 rounded-full h-10 w-10 flex items-center justify-center flex-shrink-0">
+                        <Bot className="w-5 h-5 text-gray-800" />
+                      </div>
                     )}
-                    {formatWeatherData(message.weatherData)}
-                    {formatMarketData(message.marketData)}
-                    <p className="text-xs mt-2 text-gray-500">
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </p>
-                  </div>
 
-                  {message.role === "user" && (
-                    <div className="bg-yellow-200 p-1.5 sm:p-2 rounded-full h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-800" />
+                    <div
+                      className={`max-w-2xl px-6 py-4 rounded-2xl ${
+                        message.role === "user"
+                          ? "bg-white/80 backdrop-blur-sm text-gray-800 border border-yellow-200 rounded-bl-md"
+                          : "bg-white/80 backdrop-blur-sm text-gray-800 border border-yellow-200 rounded-bl-md"
+                      }`}
+                    >
+                      {message.role === "assistant" ? (
+                        <div>
+                          <div
+                            className="text-sm leading-relaxed formatted-content"
+                            dangerouslySetInnerHTML={{
+                              __html: formattedData.formattedContent,
+                            }}
+                          />
+                          {/* Apply buttons for extracted links */}
+                          {formattedData.links.length > 0 && (
+                            <div className="mt-4 space-y-2">
+                              {formattedData.links.map((link, linkIndex) => (
+                                <button
+                                  key={linkIndex}
+                                  onClick={() => handleApplyClick(link.url)}
+                                  className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 transform hover:scale-105 shadow-sm"
+                                  title={`Visit: ${link.url}`}
+                                >
+                                  <ExternalLink className="w-4 h-4" />
+                                  Apply
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm leading-relaxed">
+                          {message.content}
+                        </p>
+                      )}
+                      {formatWeatherData(message.weatherData)}
+                      {formatMarketData(message.marketData)}
+                      <p
+                        className={`text-xs mt-2 ${
+                          message.role === "user"
+                            ? "text-gray-500"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {new Date(message.timestamp).toLocaleTimeString()}
+                      </p>
                     </div>
-                  )}
-                </div>
-              ))
+
+                    {message.role === "user" && (
+                      <div className="bg-yellow-200 p-2 rounded-full h-10 w-10 flex items-center justify-center flex-shrink-0">
+                        <User className="w-5 h-5 text-gray-800" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
 
             {isLoading && (
-              <div className="flex gap-2 sm:gap-3 justify-start">
-                <div className="bg-yellow-200 p-1.5 sm:p-2 rounded-full h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-gray-800" />
+              <div className="flex gap-3 justify-start">
+                <div className="bg-yellow-200 p-2 rounded-full h-10 w-10 flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-5 h-5 text-gray-800" />
                 </div>
-                <div className="bg-white/80 backdrop-blur-sm px-3 sm:px-6 py-3 sm:py-4 rounded-2xl rounded-bl-md border border-yellow-200">
+                <div className="bg-white/80 backdrop-blur-sm px-6 py-4 rounded-2xl rounded-bl-md border border-yellow-200">
                   <div className="flex items-center space-x-2">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce"></div>
@@ -675,9 +683,7 @@ const ChatInterface: React.FC = () => {
                         style={{ animationDelay: "0.2s" }}
                       ></div>
                     </div>
-                    <span className="text-xs sm:text-sm text-gray-600">
-                      Thinking...
-                    </span>
+                    <span className="text-sm text-gray-600">Thinking...</span>
                   </div>
                 </div>
               </div>
@@ -686,8 +692,8 @@ const ChatInterface: React.FC = () => {
           </div>
 
           {/* Input Area */}
-          <div className="bg-white/80 backdrop-blur-sm border border-yellow-200 rounded-2xl p-2 sm:p-4 shadow-sm">
-            <div className="flex items-center gap-2 sm:gap-3">
+          <div className="bg-white/80 backdrop-blur-sm border border-yellow-200 rounded-2xl p-4 shadow-sm">
+            <div className="flex items-center gap-3">
               <input
                 type="text"
                 value={inputText}
@@ -695,38 +701,37 @@ const ChatInterface: React.FC = () => {
                 onKeyPress={(e) =>
                   e.key === "Enter" && !e.shiftKey && handleSendMessage()
                 }
-                placeholder={`Ask me about farming, weather, or government schemes... (${getCurrentLanguageName()})`}
-                className="flex-1 px-2 sm:px-4 py-2 sm:py-3 bg-transparent border-none focus:outline-none text-gray-800 placeholder-gray-500 text-sm sm:text-base min-w-0"
+                placeholder={`Ask me about farming, weather, or government schemes... (responding in ${getCurrentLanguageName()})`}
+                className="flex-1 px-4 py-3 bg-transparent border-none focus:outline-none text-gray-800 placeholder-gray-500"
                 disabled={isLoading}
               />
 
               <button
                 onClick={isListening ? stopListening : startListening}
-                className={`flex items-center justify-center p-2 sm:p-3 rounded-full transition-all duration-200 flex-shrink-0 ${
+                className={`p-3 rounded-full transition-all duration-200 ${
                   isListening
                     ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-600"
                 }`}
                 title={isListening ? "Stop listening" : "Start voice input"}
-                style={{ minWidth: 40, minHeight: 40 }} // Ensures a perfect circle on small screens
               >
-                <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Mic className="w-5 h-5" />
               </button>
 
               <button
                 onClick={() => handleSendMessage()}
                 disabled={isLoading || !inputText.trim()}
-                className="px-3 sm:px-6 py-2 sm:py-3 bg-yellow-300 text-gray-800 rounded-full hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 flex items-center gap-1 sm:gap-2 flex-shrink-0"
+                className="px-6 py-3 bg-yellow-300 text-gray-800 rounded-full hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
               >
-                <Send className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="font-medium text-sm sm:text-base">Send</span>
+                <Send className="w-4 h-4" />
+                <span className="font-medium">Send</span>
               </button>
             </div>
 
             {/* Voice indicator */}
             {isListening && (
               <div className="mt-2 text-center">
-                <span className="text-xs sm:text-sm text-red-600 animate-pulse">
+                <span className="text-sm text-red-600 animate-pulse">
                   🎤 Listening... Speak now in {getCurrentLanguageName()}
                 </span>
               </div>
@@ -748,40 +753,6 @@ const ChatInterface: React.FC = () => {
 
         .formatted-content div:not(:last-child) {
           margin-bottom: 0.5rem;
-        }
-
-        /* Custom breakpoint for extra small screens */
-        @media (min-width: 375px) {
-          .xs\:inline {
-            display: inline;
-          }
-        }
-
-        /* Ensure proper scrolling on mobile */
-        @media (max-width: 640px) {
-          .overflow-y-auto {
-            -webkit-overflow-scrolling: touch;
-          }
-        }
-
-        /* Fix input focus on mobile */
-        @media (max-width: 640px) {
-          input:focus {
-            transform: none;
-            zoom: 1;
-          }
-        }
-
-        /* Improve touch targets on mobile */
-        @media (max-width: 640px) {
-          button {
-            min-height: 44px;
-            min-width: 44px;
-          }
-
-          button:not(.rounded-full) {
-            min-height: 48px;
-          }
         }
       `}</style>
     </div>

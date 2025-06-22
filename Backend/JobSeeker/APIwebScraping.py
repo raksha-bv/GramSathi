@@ -17,12 +17,12 @@ def script(location, experience):
 
     from selenium.webdriver.chrome.options import Options
     chrome_options = Options()
-    # chrome_options.add_argument("--headless")
-    # chrome_options.add_argument("--no-sandbox")
-    # chrome_options.add_argument("--disable-dev-shm-usage")
-    # chrome_options.add_argument("--disable-gpu")
-    # chrome_options.add_argument("--disable-extensions")
-    # chrome_options.add_argument("--disable-images")
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-images")
     chrome_options.page_load_strategy = 'eager'
     
     driver = webdriver.Chrome(options=chrome_options)

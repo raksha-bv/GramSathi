@@ -6,6 +6,7 @@ import {
 } from "./weather-api";
 import { fetchCommodityPrice, getLatestPrice } from "./market-api";
 import { MarketIntent } from "../types/market";
+import { fetchJobs } from "./job-api"; // <-- Add this import
 
 interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -25,6 +26,12 @@ interface AppointmentIntent {
   dateTime?: string;
   phoneNumber?: string;
   missingInfo?: string[];
+}
+
+interface JobIntent {
+  type: "job" | "none";
+  location?: string;
+  experience?: string;
 }
 
 export class ChatbotService {
@@ -63,6 +70,7 @@ export class ChatbotService {
     marketData?: any;
     appointmentScheduled?: boolean;
     needsAppointmentInfo?: boolean;
+    jobData?: any; // <-- Add this
   }> {
     try {
       console.log("Processing message:", userMessage);
@@ -226,6 +234,21 @@ export class ChatbotService {
           console.error("Weather API error:", weatherError);
           response =
             "I'm having trouble getting weather data right now. Please try again later.";
+        }
+      }
+      // NEW: Detect job intent
+      const jobIntent = this.detectJobIntent(messageForIntentDetection);
+      if (jobIntent.type === "job") {
+        try {
+          const jobData = await fetchJobs(
+            jobIntent.location || "Karnataka",
+            jobIntent.experience || "1"
+          );
+          response = this.generateJobResponse(jobData);
+        } catch (jobError) {
+          console.error("Job API error:", jobError);
+          response =
+            "I'm having trouble fetching job information right now. Please try again later.";
         }
       }
       // General farming chat
@@ -572,6 +595,184 @@ export class ChatbotService {
     }
 
     console.log("No commodity found in message:", message);
+    return undefined;
+  }
+  private extractState(message: string): string | undefined {
+    const messageLower = message.toLowerCase();
+
+    // List of Indian states (add more as needed)
+    const states = [
+      "karnataka",
+      "maharashtra",
+      "tamil nadu",
+      "andhra pradesh",
+      "telangana",
+      "kerala",
+      "gujarat",
+      "rajasthan",
+      "uttar pradesh",
+      "madhya pradesh",
+      "punjab",
+      "haryana",
+      "bihar",
+      "west bengal",
+      "odisha",
+      "chhattisgarh",
+      "jharkhand",
+      "assam",
+      "goa",
+      "manipur",
+      "meghalaya",
+      "mizoram",
+      "nagaland",
+      "tripura",
+      "arunachal pradesh",
+      "sikkim",
+      "uttarakhand",
+      "himachal pradesh",
+      "delhi",
+      "jammu and kashmir",
+      "ladakh",
+    ];
+
+    // Local language and alternate spellings
+    const stateMap: { [key: string]: string } = {
+      // English to proper case
+      karnataka: "Karnataka",
+      maharashtra: "Maharashtra",
+      tamilnadu: "Tamil Nadu",
+      "tamil nadu": "Tamil Nadu",
+      ap: "Andhra Pradesh",
+      andhra: "Andhra Pradesh",
+      telangana: "Telangana",
+      kerala: "Kerala",
+      gujarat: "Gujarat",
+      rajasthan: "Rajasthan",
+      up: "Uttar Pradesh",
+      "uttar pradesh": "Uttar Pradesh",
+      mp: "Madhya Pradesh",
+      "madhya pradesh": "Madhya Pradesh",
+      punjab: "Punjab",
+      haryana: "Haryana",
+      bihar: "Bihar",
+      bengal: "West Bengal",
+      "west bengal": "West Bengal",
+      odisha: "Odisha",
+      orissa: "Odisha",
+      chhattisgarh: "Chhattisgarh",
+      jharkhand: "Jharkhand",
+      assam: "Assam",
+      goa: "Goa",
+      manipur: "Manipur",
+      meghalaya: "Meghalaya",
+      mizoram: "Mizoram",
+      nagaland: "Nagaland",
+      tripura: "Tripura",
+      arunachal: "Arunachal Pradesh",
+      "arunachal pradesh": "Arunachal Pradesh",
+      sikkim: "Sikkim",
+      uttarakhand: "Uttarakhand",
+      "himachal pradesh": "Himachal Pradesh",
+      delhi: "Delhi",
+      "jammu and kashmir": "Jammu and Kashmir",
+      ladakh: "Ladakh",
+      // Hindi/local
+      कर्नाटक: "Karnataka",
+      महाराष्ट्र: "Maharashtra",
+      तमिलनाडु: "Tamil Nadu",
+      आंध्र: "Andhra Pradesh",
+      तेलंगाना: "Telangana",
+      केरल: "Kerala",
+      गुजरात: "Gujarat",
+      राजस्थान: "Rajasthan",
+      उत्तरप्रदेश: "Uttar Pradesh",
+      मध्यप्रदेश: "Madhya Pradesh",
+      पंजाब: "Punjab",
+      हरियाणा: "Haryana",
+      बिहार: "Bihar",
+      बंगाल: "West Bengal",
+      ओडिशा: "Odisha",
+      छत्तीसगढ़: "Chhattisgarh",
+      झारखंड: "Jharkhand",
+      असम: "Assam",
+      गोवा: "Goa",
+      मणिपुर: "Manipur",
+      मेघालय: "Meghalaya",
+      मिजोरम: "Mizoram",
+      नागालैंड: "Nagaland",
+      त्रिपुरा: "Tripura",
+      अरुणाचल: "Arunachal Pradesh",
+      सिक्किम: "Sikkim",
+      उत्तराखंड: "Uttarakhand",
+      हिमाचल: "Himachal Pradesh",
+      दिल्ली: "Delhi",
+      जम्मू: "Jammu and Kashmir",
+      लद्दाख: "Ladakh",
+    };
+
+    const words = messageLower.split(/\s+/);
+
+    for (const word of words) {
+      const cleanWord = word.replace(/[.,!?;:]/g, "");
+
+      // Skip common words
+      if (
+        [
+          "price",
+          "of",
+          "in",
+          "at",
+          "the",
+          "today",
+          "tomorrow",
+          "what",
+          "is",
+          "how",
+          "much",
+          "कीमत",
+          "में",
+          "पर",
+          "आज",
+          "कल",
+          "क्या",
+          "है",
+          "कैसे",
+          "कितना",
+        ].includes(cleanWord)
+      ) {
+        continue;
+      }
+
+      // Check state mappings first
+      for (const [key, value] of Object.entries(stateMap)) {
+        if (
+          cleanWord === key ||
+          cleanWord.includes(key) ||
+          key.includes(cleanWord)
+        ) {
+          console.log(`Found state: ${cleanWord} -> ${key} -> ${value}`);
+          return value;
+        }
+      }
+
+      // Then check direct state matches
+      for (const state of states) {
+        if (
+          cleanWord === state ||
+          cleanWord.includes(state) ||
+          state.includes(cleanWord)
+        ) {
+          const properState = state
+            .split(" ")
+            .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+            .join(" ");
+          console.log(`Found state: ${cleanWord} -> ${properState}`);
+          return properState;
+        }
+      }
+    }
+
+    console.log("No state found in message:", message);
     return undefined;
   }
 
@@ -1553,5 +1754,45 @@ Please provide both details so I can schedule your reminder call.`;
     }
 
     return undefined;
+  }
+
+  private detectJobIntent(message: string): JobIntent {
+    const messageLower = message.toLowerCase();
+    // Simple keywords for job search
+    if (
+      messageLower.includes("job") ||
+      messageLower.includes("vacancy") ||
+      messageLower.includes("work") ||
+      messageLower.includes("employment") ||
+      messageLower.includes("opening") ||
+      messageLower.includes("jobs")
+    ) {
+      // Try to extract location and experience
+      const location = this.extractState(message);
+      // Look for experience in years (e.g., "2 years experience" or "experience 2")
+      const expMatch = messageLower.match(
+        /(\d+)\s*(years?|yrs?)?\s*experience?/
+      );
+      const experience = expMatch ? expMatch[1] : "1";
+      return { type: "job", location, experience };
+    }
+    return { type: "none" };
+  }
+
+  private generateJobResponse(jobData: { url: string; jobs: any[] }): string {
+    if (!jobData || !jobData.jobs || jobData.jobs.length === 0) {
+      return "Sorry, I couldn't find any job openings for your query.";
+    }
+    const topJobs = jobData.jobs.slice(0, 3);
+    const jobLines = topJobs
+      .map(
+        (job, idx) =>
+          `${idx + 1}. ${job.JobTitle} at ${job.Organization} (${
+            job.Location
+          }) - Salary: ${job.SalaryRange}`
+      )
+      .join("\n");
+    // Only mention "Apply" (the frontend will turn the URL into a button)
+    return `Here are some job openings for you:\n${jobLines}\n\n[Apply](${jobData.url})`;
   }
 }
