@@ -112,7 +112,7 @@ const PremiumVoiceAssistant: React.FC = () => {
 
   const getChatCompletion = async (message: string): Promise<string | null> => {
     try {
-      const response = await fetch("/api/voice-chat", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

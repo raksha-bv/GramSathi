@@ -82,12 +82,37 @@ class AppointmentScheduler:
             }
     
     def parse_appointment_datetime(self, datetime_string: str) -> datetime:
-        """Parse various datetime formats with improved time handling"""
-        datetime_string = datetime_string.lower().strip()
+        """Parse various datetime formats with improved handling"""
+        datetime_string = datetime_string.strip()
         now = datetime.now()
         
-        # Handle relative dates with times
-        if "tomorrow" in datetime_string:
+        # First, try to parse ISO format (from frontend)
+        iso_formats = [
+            "%Y-%m-%dT%H:%M:%S.%fZ",  # 2025-06-22T00:55:00.000Z
+            "%Y-%m-%dT%H:%M:%SZ",     # 2025-06-22T00:55:00Z
+            "%Y-%m-%dT%H:%M:%S",      # 2025-06-22T00:55:00
+            "%Y-%m-%dT%H:%M",         # 2025-06-22T00:55
+        ]
+        
+        for fmt in iso_formats:
+            try:
+                if fmt.endswith('Z'):
+                    # Handle UTC timezone - remove Z and parse as UTC, then convert to local
+                    clean_string = datetime_string.rstrip('Z')
+                    parsed_time = datetime.strptime(clean_string, fmt[:-1])
+                    # Assuming the backend should work in local time
+                    # If you need UTC handling, you'd use timezone-aware datetime
+                    return parsed_time
+                else:
+                    parsed_time = datetime.strptime(datetime_string, fmt)
+                    return parsed_time
+            except ValueError:
+                continue
+        
+        # Handle relative dates with times (existing logic)
+        datetime_lower = datetime_string.lower()
+        
+        if "tomorrow" in datetime_lower:
             base_date = now + timedelta(days=1)
             time_part = self.extract_time_from_string(datetime_string)
             if time_part:
@@ -95,19 +120,17 @@ class AppointmentScheduler:
             else:
                 return base_date.replace(hour=9, minute=0, second=0, microsecond=0)
         
-        elif "today" in datetime_string:
+        elif "today" in datetime_lower:
             base_date = now
             time_part = self.extract_time_from_string(datetime_string)
             if time_part:
                 appointment_time = base_date.replace(hour=time_part[0], minute=time_part[1], second=0, microsecond=0)
-                # If time has passed today, schedule for tomorrow
-                if appointment_time <= now:
-                    appointment_time = appointment_time + timedelta(days=1)
+                # REMOVED: Automatic day shifting - let the frontend handle this logic
                 return appointment_time
             else:
                 return base_date.replace(hour=9, minute=0, second=0, microsecond=0)
         
-        elif "next week" in datetime_string:
+        elif "next week" in datetime_lower:
             base_date = now + timedelta(days=7)
             time_part = self.extract_time_from_string(datetime_string)
             if time_part:
@@ -115,8 +138,8 @@ class AppointmentScheduler:
             else:
                 return base_date.replace(hour=9, minute=0, second=0, microsecond=0)
         
-        # Try to parse complete datetime formats
-        datetime_formats = [
+        # Try to parse other complete datetime formats
+        other_formats = [
             "%Y-%m-%d %H:%M:%S",
             "%Y-%m-%d %H:%M",
             "%d/%m/%Y %H:%M",
@@ -125,7 +148,7 @@ class AppointmentScheduler:
             "%B %d at %I:%M %p",  # "June 25 at 3:30 PM"
         ]
         
-        for fmt in datetime_formats:
+        for fmt in other_formats:
             try:
                 parsed_time = datetime.strptime(datetime_string, fmt)
                 # Add current year if not specified

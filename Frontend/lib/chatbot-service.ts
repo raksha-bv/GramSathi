@@ -276,6 +276,76 @@ export class ChatbotService {
 
   // NEW: Helper method to detect if message is likely in a non-English language
   private isNonEnglishMessage(message: string): boolean {
+    // First check if message is primarily numbers, dates, or technical terms
+    const technicalPattern = /^[\w\s\d\-\+\(\)@.:,]+$/;
+    if (technicalPattern.test(message)) {
+      // If it's mostly technical/alphanumeric, check for English words
+      const englishWords = [
+        "set",
+        "schedule",
+        "appointment",
+        "meeting",
+        "at",
+        "on",
+        "am",
+        "pm",
+        "gynecologist",
+        "doctor",
+        "dentist",
+        "the",
+        "and",
+        "or",
+        "but",
+        "is",
+        "are",
+        "was",
+        "were",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "what",
+        "where",
+        "when",
+        "how",
+        "price",
+        "weather",
+        "today",
+        "tomorrow",
+        "june",
+        "july",
+        "august",
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "september",
+        "october",
+        "november",
+        "december",
+      ];
+
+      const words = message.toLowerCase().split(/\s+/);
+      const englishWordCount = words.filter((word) =>
+        englishWords.some(
+          (englishWord) =>
+            word.includes(englishWord) || englishWord.includes(word)
+        )
+      ).length;
+
+      // If we find English appointment/scheduling words, consider it English
+      if (englishWordCount > 0) {
+        return false;
+      }
+    }
+
     // Check for common English words
     const englishWords = [
       "the",
@@ -304,21 +374,33 @@ export class ChatbotService {
       "weather",
       "today",
       "tomorrow",
+      "set",
+      "schedule",
+      "appointment",
+      "meeting",
+      "gynecologist",
+      "doctor",
     ];
+
     const words = message.toLowerCase().split(/\s+/);
     const englishWordCount = words.filter((word) =>
       englishWords.includes(word)
     ).length;
 
-    // If less than 20% of words are common English words, likely non-English
+    // If more than 30% of words are common English words, consider it English
     const englishRatio = englishWordCount / words.length;
 
-    // Also check for non-Latin characters (Devanagari, etc.)
-    const hasNonLatinChars = /[^\u0000-\u007F\u00A0-\u00FF]/.test(message);
+    // Check for non-Latin characters (but be more specific)
+    const hasSignificantNonLatinChars =
+      /[\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0A80-\u0AFF\u0B00-\u0B7F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F]{3,}/.test(
+        message
+      );
 
-    return englishRatio < 0.2 || hasNonLatinChars;
+    // Only consider non-English if:
+    // 1. English ratio is very low AND
+    // 2. Has significant non-Latin characters
+    return englishRatio < 0.3 && hasSignificantNonLatinChars;
   }
-
   private enhanceMarketIntentWithContext(
     intent: MarketIntent,
     userMessage: string
@@ -955,11 +1037,15 @@ Please provide a helpful response about the weather with practical farming advic
     const hasAppointmentKeywords =
       messageLower.includes("appointment") ||
       messageLower.includes("scheduled") ||
-      messageLower.includes("gynacologist") ||
+      messageLower.includes("schedule") ||
+      messageLower.includes("set") ||
+      messageLower.includes("gynecologist") ||
+      messageLower.includes("gynacologist") || // Handle typo from translation
       messageLower.includes("doctor") ||
       messageLower.includes("medical") ||
       messageLower.includes("dentist") ||
       messageLower.includes("checkup") ||
+      messageLower.includes("meeting") || // Add "meeting" as it appears in translation
       messageLower.includes("visit");
 
     // Check if this looks like a date/time response (for follow-up appointment scheduling)
@@ -974,6 +1060,7 @@ Please provide a helpful response about the weather with practical farming advic
     // Check if this is a NEW appointment request (contains "schedule" or "want to")
     const isNewAppointmentRequest =
       messageLower.includes("schedule") ||
+      messageLower.includes("set") || // Add "set" as it appears in translation
       messageLower.includes("want to") ||
       messageLower.includes("need to") ||
       messageLower.includes("book") ||
@@ -985,9 +1072,12 @@ Please provide a helpful response about the weather with practical farming advic
       (hasPhoneNumberPattern && recentAppointmentContext)
     ) {
       // Extract appointment type
-      let appointmentType = "gynacologist"; // default
-      if (messageLower.includes("gynacologist"))
-        appointmentType = "gynacologist";
+      let appointmentType = "gynecologist"; // default
+      if (
+        messageLower.includes("gynecologist") ||
+        messageLower.includes("gynacologist")
+      )
+        appointmentType = "gynecologist";
       if (messageLower.includes("doctor")) appointmentType = "doctor";
       if (messageLower.includes("medical")) appointmentType = "medical";
       if (messageLower.includes("dentist")) appointmentType = "dentist";
@@ -997,7 +1087,7 @@ Please provide a helpful response about the weather with practical farming advic
       // If this is a phone number response, get the appointment type from recent context
       if (hasPhoneNumberPattern && recentAppointmentContext) {
         appointmentType =
-          this.getAppointmentTypeFromContext() || "gynacologist";
+          this.getAppointmentTypeFromContext() || "gynecologist";
       }
 
       // Extract date and time
@@ -1028,7 +1118,6 @@ Please provide a helpful response about the weather with practical farming advic
 
     return { type: "none" };
   }
-
   private looksLikeDateTimeResponse(message: string): boolean {
     const messageLower = message.toLowerCase();
 
@@ -1037,7 +1126,7 @@ Please provide a helpful response about the weather with practical farming advic
       // Month day at time patterns
       /(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}\s+at\s+\d{1,2}:\d{2}\s*(am|pm)/i,
       // Tomorrow/today at time
-      /(tomorrow|today)\s+at\s+\d{1,2}:\d{2}\s*(am|pm)/i,
+      // /(tomorrow|today)\s+at\s+\d{1,2}:\d{2}\s*(am|pm)/i,
       // Just time patterns
       /\d{1,2}:\d{2}\s*(am|pm)/i,
       // Date patterns
@@ -1140,24 +1229,25 @@ Please provide a helpful response about the weather with practical farming advic
     }
   }
 
+  // Fixed extractAppointmentDateTime method with better date handling
   private extractAppointmentDateTime(message: string): string | undefined {
     const messageLower = message.toLowerCase();
 
-    // Pattern for "22nd June at 1:20 AM" or "June 22nd at 1:20 AM"
+    // Pattern for "22nd June at 1:20 AM" or "June 22nd at 1:20 AM" or "22 June 2025 at 5:06 AM"
     const dayMonthTimePattern =
-      /(\d{1,2})(st|nd|rd|th)?\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+at\s+(\d{1,2}):(\d{2})\s*(am|pm)/i;
+      /(\d{1,2})(st|nd|rd|th)?\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+(?:(\d{4})\s+)?at\s+(\d{1,2}):?(\d{2})?\s*(am|pm)/i;
     const monthDayTimePattern =
-      /(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(st|nd|rd|th)?\s+at\s+(\d{1,2}):(\d{2})\s*(am|pm)/i;
+      /(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(st|nd|rd|th)?\s*(?:,?\s*(\d{4}))?\s+at\s+(\d{1,2}):?(\d{2})?\s*(am|pm)/i;
 
     let match = message.match(dayMonthTimePattern);
     if (match) {
       const day = match[1];
       const month = match[3];
-      const hour = match[4];
-      const minute = match[5];
-      const period = match[6];
+      const year = match[4] || new Date().getFullYear().toString();
+      const hour = match[5];
+      const minute = match[6] || "00"; // Default to 00 if no minutes specified
+      const period = match[7];
 
-      const currentYear = new Date().getFullYear();
       const monthNumber = this.getMonthNumber(month);
 
       // Convert to 24-hour format
@@ -1168,22 +1258,52 @@ Please provide a helpful response about the weather with practical farming advic
         hour24 = 0;
       }
 
-      return `${currentYear}-${monthNumber
+      // Create a proper date object to validate
+      const appointmentDate = new Date(
+        parseInt(year),
+        monthNumber - 1, // Month is 0-indexed in Date constructor
+        parseInt(day),
+        hour24,
+        parseInt(minute)
+      );
+
+      // Validate the date
+      if (isNaN(appointmentDate.getTime())) {
+        console.error("Invalid date created:", {
+          year,
+          month: monthNumber,
+          day,
+          hour24,
+          minute,
+        });
+        return undefined;
+      }
+
+      // Return ISO format datetime string
+      const isoString = `${year}-${monthNumber
         .toString()
-        .padStart(2, "0")}-${day.padStart(2, "0")} ${hour24
+        .padStart(2, "0")}-${day.padStart(2, "0")}T${hour24
         .toString()
-        .padStart(2, "0")}:${minute}`;
+        .padStart(2, "0")}:${minute.padStart(2, "0")}:00`;
+
+      console.log("Extracted appointment datetime:", isoString);
+      console.log(
+        "Validation - Created date object:",
+        appointmentDate.toISOString()
+      );
+
+      return isoString;
     }
 
     match = message.match(monthDayTimePattern);
     if (match) {
       const month = match[1];
       const day = match[2];
-      const hour = match[4];
-      const minute = match[5];
-      const period = match[6];
+      const year = match[4] || new Date().getFullYear().toString();
+      const hour = match[5];
+      const minute = match[6] || "00"; // Default to 00 if no minutes specified
+      const period = match[7];
 
-      const currentYear = new Date().getFullYear();
       const monthNumber = this.getMonthNumber(month);
 
       // Convert to 24-hour format
@@ -1194,11 +1314,41 @@ Please provide a helpful response about the weather with practical farming advic
         hour24 = 0;
       }
 
-      return `${currentYear}-${monthNumber
+      // Create a proper date object to validate
+      const appointmentDate = new Date(
+        parseInt(year),
+        monthNumber - 1, // Month is 0-indexed in Date constructor
+        parseInt(day),
+        hour24,
+        parseInt(minute)
+      );
+
+      // Validate the date
+      if (isNaN(appointmentDate.getTime())) {
+        console.error("Invalid date created:", {
+          year,
+          month: monthNumber,
+          day,
+          hour24,
+          minute,
+        });
+        return undefined;
+      }
+
+      // Return ISO format datetime string
+      const isoString = `${year}-${monthNumber
         .toString()
-        .padStart(2, "0")}-${day.padStart(2, "0")} ${hour24
+        .padStart(2, "0")}-${day.padStart(2, "0")}T${hour24
         .toString()
-        .padStart(2, "0")}:${minute}`;
+        .padStart(2, "0")}:${minute.padStart(2, "0")}:00`;
+
+      console.log("Extracted appointment datetime:", isoString);
+      console.log(
+        "Validation - Created date object:",
+        appointmentDate.toISOString()
+      );
+
+      return isoString;
     }
 
     // Fallback to existing logic for other patterns
@@ -1216,7 +1366,30 @@ Please provide a helpful response about the weather with practical farming advic
     }
 
     if (timeMatch) {
-      return `tomorrow ${timeMatch[0]}`;
+      // For time-only patterns, assume today's date
+      const today = new Date();
+      const hour = parseInt(timeMatch[1]);
+      const minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+      const period = timeMatch[3] || timeMatch[2]; // Handle both patterns
+
+      let hour24 = hour;
+      if (period && period.toLowerCase() === "pm" && hour24 !== 12) {
+        hour24 += 12;
+      } else if (period && period.toLowerCase() === "am" && hour24 === 12) {
+        hour24 = 0;
+      }
+
+      const isoString = `${today.getFullYear()}-${(today.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${today
+        .getDate()
+        .toString()
+        .padStart(2, "0")}T${hour24.toString().padStart(2, "0")}:${minute
+        .toString()
+        .padStart(2, "0")}:00`;
+
+      console.log("Extracted time-only appointment datetime:", isoString);
+      return isoString;
     }
 
     return undefined;
@@ -1245,11 +1418,30 @@ Please provide a helpful response about the weather with practical farming advic
     appointmentIntent: AppointmentIntent
   ): Promise<any> {
     try {
+      // Validate appointment datetime
+      if (appointmentIntent.dateTime) {
+        const appointmentDate = new Date(appointmentIntent.dateTime);
+        if (isNaN(appointmentDate.getTime())) {
+          throw new Error("Invalid appointment date/time format");
+        }
+
+        // Check if appointment is in the past
+        const now = new Date();
+        if (appointmentDate <= now) {
+          throw new Error("Appointment time cannot be in the past");
+        }
+
+        console.log("Appointment validation passed:");
+        console.log("- Requested datetime:", appointmentIntent.dateTime);
+        console.log("- Parsed date object:", appointmentDate.toISOString());
+        console.log("- Local time:", appointmentDate.toLocaleString());
+      }
+
       // Format the appointment data properly
       const appointmentData = {
         phone_number: appointmentIntent.phoneNumber,
         appointment_datetime: appointmentIntent.dateTime,
-        appointment_type: appointmentIntent.appointmentType || "gynacologist",
+        appointment_type: appointmentIntent.appointmentType || "gynecologist",
       };
 
       console.log("Sending appointment data:", appointmentData);
@@ -1266,11 +1458,29 @@ Please provide a helpful response about the weather with practical farming advic
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status}, message: ${errorText}`
+        );
       }
 
       const result = await response.json();
       console.log("Appointment scheduling result:", result);
+
+      // Validate that the returned appointment time matches what was requested
+      if (result.appointment_time && appointmentIntent.dateTime) {
+        const requestedDate = new Date(appointmentIntent.dateTime);
+        const returnedDate = new Date(result.appointment_time);
+
+        if (requestedDate.toDateString() !== returnedDate.toDateString()) {
+          console.warn(
+            "WARNING: Backend returned different date than requested!"
+          );
+          console.warn("Requested:", requestedDate.toISOString());
+          console.warn("Returned:", returnedDate.toISOString());
+        }
+      }
+
       return result;
     } catch (error) {
       console.error("Error scheduling appointment:", error);
@@ -1306,24 +1516,39 @@ Please provide both details so I can schedule your reminder call.`;
   private extractPhoneNumber(message: string): string | undefined {
     // Look for phone number patterns
     const phonePatterns = [
-      /(\+91|91)?[\s\-]?[6-9]\d{9}/g, // Indian phone numbers
+      /(\+91|91)?[\s\-]?([6-9]\d{9})/g, // Indian phone numbers - capture the actual number
       /(\+1)?[\s\-]?\(?([2-9]\d{2})\)?[\s\-]?(\d{3})[\s\-]?(\d{4})/g, // US phone numbers
-      /(\+\d{1,3})?[\s\-]?\d{10,15}/g, // General international format
     ];
 
     for (const pattern of phonePatterns) {
-      const match = message.match(pattern);
-      if (match) {
-        let cleanNumber = match[0].replace(/[\s\-\(\)]/g, ""); // Clean up the number
+      const matches = [...message.matchAll(pattern)];
+      if (matches.length > 0) {
+        const match = matches[0];
+        let cleanNumber;
 
-        // Add +91 prefix for Indian numbers if not present
-        if (cleanNumber.length === 10 && cleanNumber.startsWith("7")) {
-          cleanNumber = "+91" + cleanNumber;
-        } else if (cleanNumber.length === 10 && !cleanNumber.startsWith("+")) {
-          cleanNumber = "+91" + cleanNumber;
+        if (pattern === phonePatterns[0]) {
+          // Indian number
+          cleanNumber = match[2]; // Get the 10-digit part
+          // Validate Indian mobile number (should start with 6-9)
+          if (
+            cleanNumber &&
+            cleanNumber.length === 10 &&
+            /^[6-9]/.test(cleanNumber)
+          ) {
+            const formattedNumber = "+91" + cleanNumber;
+            console.log("Extracted phone number:", formattedNumber);
+            return formattedNumber;
+          }
+        } else {
+          // US or other formats
+          cleanNumber = match[0].replace(/[\s\-\(\)]/g, "");
+          if (cleanNumber.length >= 10) {
+            console.log("Extracted phone number:", cleanNumber);
+            return cleanNumber.startsWith("+")
+              ? cleanNumber
+              : "+" + cleanNumber;
+          }
         }
-
-        return cleanNumber;
       }
     }
 
