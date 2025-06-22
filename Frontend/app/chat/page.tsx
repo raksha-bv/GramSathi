@@ -412,7 +412,7 @@ const ChatInterface: React.FC = () => {
     "Best crops for this season",
     "Government farming schemes",
     "Crop disease diagnosis",
-    "Market prices today",
+    "Market prices of Potato ",
     "Irrigation tips",
   ];
 
@@ -643,7 +643,7 @@ const ChatInterface: React.FC = () => {
                         </p>
                       )}
                       {formatWeatherData(message.weatherData)}
-                      {formatMarketData(message.marketData)}
+                      {/* {formatMarketData(message.marketData)} */}
                       <p
                         className={`text-xs mt-2 ${
                           message.role === "user"

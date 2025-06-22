@@ -22,6 +22,9 @@ interface User {
   isDisabled: boolean;
   isWidow: boolean;
   hasShelter: boolean;
+  // Job interest fields
+  interestedInJob?: boolean;
+  yearsOfExperience?: number;
 }
 
 interface AuthState {
@@ -58,6 +61,9 @@ interface RegisterData {
   isDisabled?: boolean;
   isWidow?: boolean;
   hasShelter?: boolean;
+  // Job interest fields
+  interestedInJob?: boolean;
+  yearsOfExperience?: number;
 }
 
 type AuthStore = AuthState & AuthActions;

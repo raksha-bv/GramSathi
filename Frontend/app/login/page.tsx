@@ -24,6 +24,9 @@ const LoginPage: React.FC = () => {
     isDisabled: false,
     isWidow: false,
     hasShelter: true,
+    // Job interest fields
+    interestedInJob: false,
+    yearsOfExperience: "",
   });
 
   const { login, register, isLoading, error, isAuthenticated, clearError } =
@@ -76,6 +79,17 @@ const LoginPage: React.FC = () => {
       return;
     }
 
+    // If interestedInJob is true, yearsOfExperience is required
+    if (
+      registrationData.interestedInJob &&
+      (registrationData.yearsOfExperience === "" ||
+        registrationData.yearsOfExperience === undefined ||
+        registrationData.yearsOfExperience === null)
+    ) {
+      console.error("Years of experience required if interested in job");
+      return;
+    }
+
     const userData = {
       name: registrationData.name.trim(),
       phoneNumber: phoneNumber.trim(),
@@ -100,6 +114,11 @@ const LoginPage: React.FC = () => {
       isDisabled: registrationData.isDisabled,
       isWidow: registrationData.isWidow,
       hasShelter: registrationData.hasShelter,
+      // Job interest fields
+      interestedInJob: registrationData.interestedInJob,
+      yearsOfExperience: registrationData.interestedInJob
+        ? Number(registrationData.yearsOfExperience)
+        : undefined,
     };
 
     // Debug: Log the data being sent
@@ -493,18 +512,17 @@ const LoginPage: React.FC = () => {
                   }
                 >
                   <option value="">Select Language</option>
-                  <option value="hi-IN">Hindi</option>
-                  <option value="bn-IN">Bengali</option>
-                  <option value="gu-IN">Gujarati</option>
-                  <option value="kn-IN">Kannada</option>
-                  <option value="ml-IN">Malayalam</option>
-                  <option value="mr-IN">Marathi</option>
-                  <option value="od-IN">Odia</option>
-                  <option value="pa-IN">Punjabi</option>
-                  <option value="ta-IN">Tamil</option>
-                  <option value="te-IN">Telugu</option>
-                  <option value="en-IN">English</option>
-                  <option value="Other">Other</option>
+                  <option value="Hindi">Hindi</option>
+                  <option value="Bengali">Bengali</option>
+                  <option value="Gujarati">Gujarati</option>
+                  <option value="Kannada">Kannada</option>
+                  <option value="Malayalam">Malayalam</option>
+                  <option value="Marathi">Marathi</option>
+                  <option value="Odia">Odia</option>
+                  <option value="Punjabi">Punjabi</option>
+                  <option value="Tamil">Tamil</option>
+                  <option value="Telugu">Telugu</option>
+                  <option value="English">English</option>
                 </select>
               </div>
 
@@ -562,6 +580,58 @@ const LoginPage: React.FC = () => {
                 />
               </div>
 
+              {/* Job Interest Fields */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  💼 Interested in Job Opportunities?
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="interestedInJob"
+                    checked={registrationData.interestedInJob}
+                    onChange={(e) =>
+                      setRegistrationData((prev) => ({
+                        ...prev,
+                        interestedInJob: e.target.checked,
+                        // Reset yearsOfExperience if unchecked
+                        yearsOfExperience: e.target.checked
+                          ? prev.yearsOfExperience
+                          : "",
+                      }))
+                    }
+                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  />
+                  <label
+                    htmlFor="interestedInJob"
+                    className="text-sm text-gray-700"
+                  >
+                    Yes, I am interested in job opportunities
+                  </label>
+                </div>
+              </div>
+
+              {registrationData.interestedInJob && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    🏆 Years of Experience
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    value={registrationData.yearsOfExperience}
+                    onChange={(e) =>
+                      setRegistrationData((prev) => ({
+                        ...prev,
+                        yearsOfExperience: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              )}
+
               <div className="flex space-x-3 pt-4">
                 <button
                   type="button"
@@ -573,7 +643,10 @@ const LoginPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={
-                    !registrationData.category || !registrationData.gender
+                    !registrationData.category ||
+                    !registrationData.gender ||
+                    (registrationData.interestedInJob &&
+                      registrationData.yearsOfExperience === "")
                   }
                   className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

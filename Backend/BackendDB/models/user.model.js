@@ -132,6 +132,16 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // New fields for job interest
+    interestedInJob: {
+      type: Boolean,
+      default: false,
+    },
+    yearsOfExperience: {
+      type: Number,
+      min: [0, "Years of experience cannot be negative"],
+      // Not required by default, will validate in pre hook
+    },
   },
   {
     timestamps: true,
@@ -145,6 +155,17 @@ userSchema.pre("validate", function (next) {
     (!this.cropsGrown || this.cropsGrown.length === 0)
   ) {
     this.invalidate("cropsGrown", "Crops grown is required for farmers");
+  }
+  // Require yearsOfExperience if interestedInJob is true
+  if (
+    this.interestedInJob &&
+    (this.yearsOfExperience === undefined ||
+      this.yearsOfExperience === null)
+  ) {
+    this.invalidate(
+      "yearsOfExperience",
+      "Years of experience is required if interested in job"
+    );
   }
   next();
 });
