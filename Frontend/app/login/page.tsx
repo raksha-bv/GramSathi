@@ -217,7 +217,10 @@ const LoginPage: React.FC = () => {
             </form>
           ) : (
             /* Registration Form */
-            <form onSubmit={handleRegistrationSubmit} className="space-y-4 max-h-96 overflow-y-auto pr-2">
+            <form
+              onSubmit={handleRegistrationSubmit}
+              className="space-y-4 max-h-96 overflow-y-auto pr-2"
+            >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   👤 Your Name
@@ -289,7 +292,11 @@ const LoginPage: React.FC = () => {
                   onChange={(e) =>
                     setRegistrationData((prev) => ({
                       ...prev,
-                      category: e.target.value as "General" | "SC" | "ST" | "OBC",
+                      category: e.target.value as
+                        | "General"
+                        | "SC"
+                        | "ST"
+                        | "OBC",
                     }))
                   }
                 >
@@ -324,7 +331,9 @@ const LoginPage: React.FC = () => {
                   <option value="Healthcare Worker">Healthcare Worker</option>
                   <option value="Artisan">Artisan</option>
                   <option value="Labor">Labor</option>
-                  <option value="Government Employee">Government Employee</option>
+                  <option value="Government Employee">
+                    Government Employee
+                  </option>
                   <option value="Business Owner">Business Owner</option>
                   <option value="Student">Student</option>
                   <option value="Manual Scavenger">Manual Scavenger</option>
@@ -334,8 +343,10 @@ const LoginPage: React.FC = () => {
 
               {/* Eligibility Questions */}
               <div className="space-y-3 bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-700">📋 Eligibility Information</h4>
-                
+                <h4 className="font-medium text-gray-700">
+                  📋 Eligibility Information
+                </h4>
+
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -431,7 +442,10 @@ const LoginPage: React.FC = () => {
                         "Tomato",
                         "Onion",
                       ].map((crop) => (
-                        <label key={crop} className="flex items-center space-x-2">
+                        <label
+                          key={crop}
+                          className="flex items-center space-x-2"
+                        >
                           <input
                             type="checkbox"
                             checked={registrationData.cropsGrown.includes(crop)}
@@ -479,13 +493,17 @@ const LoginPage: React.FC = () => {
                   }
                 >
                   <option value="">Select Language</option>
-                  <option value="Hindi">Hindi</option>
-                  <option value="Bengali">Bengali</option>
-                  <option value="Telugu">Telugu</option>
-                  <option value="Marathi">Marathi</option>
-                  <option value="Tamil">Tamil</option>
-                  <option value="Gujarati">Gujarati</option>
-                  <option value="English">English</option>
+                  <option value="hi-IN">Hindi</option>
+                  <option value="bn-IN">Bengali</option>
+                  <option value="gu-IN">Gujarati</option>
+                  <option value="kn-IN">Kannada</option>
+                  <option value="ml-IN">Malayalam</option>
+                  <option value="mr-IN">Marathi</option>
+                  <option value="od-IN">Odia</option>
+                  <option value="pa-IN">Punjabi</option>
+                  <option value="ta-IN">Tamil</option>
+                  <option value="te-IN">Telugu</option>
+                  <option value="en-IN">English</option>
                   <option value="Other">Other</option>
                 </select>
               </div>
@@ -554,7 +572,9 @@ const LoginPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={!registrationData.category || !registrationData.gender}
+                  disabled={
+                    !registrationData.category || !registrationData.gender
+                  }
                   className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Register
