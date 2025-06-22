@@ -8,12 +8,19 @@ GramSathi is a modern AI-powered platform designed to assist rural communities, 
 
 ## Features
 
-- **AI Chatbot**: Get instant answers to farming, weather, and government scheme queries in multiple Indian languages.
-- **Voice Input**: Use speech-to-text for hands-free interaction.
-- **Weather & Market Data**: Real-time weather and market price information.
-- **Personalized Profile**: User profiles with eligibility, occupation, and location details.
-- **Agricultural Knowledge API**: Backend API for crop advice, trends, calendars, and more.
-- **Responsive Design**: Works seamlessly on desktop and mobile devices.
+- **Multilingual Chatbot**: Select your preferred language for chatbot responses. The chatbot can act as an agent, fetching real-time data (such as weather, crop prices, and government schemes) and providing actionable advice. Includes speech-to-text functionality for seamless voice-based chatting.
+
+- **Voice Assistant**: A multilingual, conversational agent that interacts with users via voice, just like a phone call. It can perform actions such as scheduling reminder calls (e.g., pregnancy check-up reminders), fetching real-time crop market data and advising on sales, and providing weather-based farming guidance.
+
+- **Personalized Dashboards**: Users receive dashboards tailored to their profile and needs. For example, farmers see crop price trends and receive advice based on their crops, while all users see eligibility and recommendations for relevant government schemes.
+
+- **Simple Sign-In**: Easy and accessible sign-in using just a phone number, designed for rural populations with limited technical experience.
+
+- **Agentic Tools**: The AI agent (powered by Sarvam AI) is enhanced with custom tools for real-time data gathering and scheduling phone calls, enabling it to interact with the real world and provide up-to-date, actionable support.
+
+- **Advanced AI Models**: Utilizes Sarvam AI's suite of models, including multilingual text generation (Sarvam M), text-to-speech, and speech-to-text, for a rich and accessible user experience.
+
+- **Beautiful Unified Frontend**: A modern, responsive web application that brings all features together in one place, making advanced AI accessible and easy to use for everyone.
 
 ## Project Structure
 
@@ -85,24 +92,6 @@ Each backend module (AgricultureKnowlegde, MarketAPI, Twilio, BackendDB) is a se
    The app will be available at `http://localhost:3000`.
 
 You can now test and use the full GramSathi platform locally. Make sure all backend services are running before using the frontend for complete functionality.
-
-## Deployment
-
-- **Backend**: Deploy the `AgricultureKnowlegde` folder to Vercel using the provided `vercel.json`.
-- **Frontend**: Deploy the Next.js app to Vercel or your preferred platform.
-
-## API Endpoints
-
-- `GET /api/health` — Health check
-- `GET /api/crops` — List supported crops
-- `GET /api/districts` — List available districts
-- `POST /api/advice` — Get agricultural advice
-- `POST /api/trends` — Get crop trends
-- `POST /api/calendar` — Get crop calendar
-- `POST /api/similar-districts` — Find similar districts
-- `GET /api/best-practices/<crop>` — Get best practices
-- `GET /api/pest-control/<crop>` — Get pest control info
-- `GET /api/dataset-info` — Get dataset information
 
 ## Technologies Used
 
