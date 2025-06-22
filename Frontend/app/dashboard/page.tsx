@@ -32,6 +32,7 @@ const DashboardPage: React.FC = () => {
     null
   );
   const [loading, setLoading] = useState<boolean>(true);
+  const [showAllJobs, setShowAllJobs] = React.useState(false);
   const [error, setError] = useState<string | null>(null);
   const [navOpen, setNavOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
@@ -96,6 +97,78 @@ const DashboardPage: React.FC = () => {
       location
     )}+india`;
   };
+  const jobListings = [
+    {
+      JobTitle: "Customer Relations Officer",
+      Location: "Bangalore, Karnataka",
+      Organization: "Apna",
+      SalaryRange: "₹15,000 - ₹20,000/month",
+      SkillRequired: "Communication Skills",
+    },
+    {
+      JobTitle: "Field Worker - Agriculture",
+      Location: `${user?.village}, ${user?.district}`,
+      Organization: "AgroFarm Pvt Ltd",
+      SalaryRange: "₹8,000 - ₹12,000/month",
+      SkillRequired: "Field Work",
+    },
+    {
+      JobTitle: "Warehouse Helper",
+      Location: `${user?.district}, ${user?.state}`,
+      Organization: "Rural Logistics",
+      SalaryRange: "₹7,000 - ₹10,000/month",
+      SkillRequired: "Manual Labor",
+    },
+    {
+      JobTitle: "Sales Executive",
+      Location: "Mysore, Karnataka",
+      Organization: "Rural Connect",
+      SalaryRange: "₹12,000 - ₹18,000/month",
+      SkillRequired: "Sales Experience",
+    },
+    {
+      JobTitle: "Data Entry Operator",
+      Location: `${user?.district}, ${user?.state}`,
+      Organization: "Digital Services",
+      SalaryRange: "₹9,000 - ₹14,000/month",
+      SkillRequired: "Computer Skills",
+    },
+    {
+      JobTitle: "Security Guard",
+      Location: "Bangalore, Karnataka",
+      Organization: "SecureMax",
+      SalaryRange: "₹8,500 - ₹11,000/month",
+      SkillRequired: "Security Training",
+    },
+    {
+      JobTitle: "Delivery Partner",
+      Location: `${user?.village}, ${user?.district}`,
+      Organization: "QuickDelivery",
+      SalaryRange: "₹10,000 - ₹15,000/month",
+      SkillRequired: "Two Wheeler License",
+    },
+    {
+      JobTitle: "Construction Worker",
+      Location: `${user?.district}, ${user?.state}`,
+      Organization: "BuildRight Construction",
+      SalaryRange: "₹8,000 - ₹12,000/month",
+      SkillRequired: "Physical Fitness",
+    },
+    {
+      JobTitle: "Kitchen Helper",
+      Location: "Ramanagara, Karnataka",
+      Organization: "Hotel Sunshine",
+      SalaryRange: "₹7,500 - ₹10,000/month",
+      SkillRequired: "Food Handling",
+    },
+    {
+      JobTitle: "Farm Supervisor",
+      Location: `${user?.village}, ${user?.district}`,
+      Organization: "GreenFields Farm",
+      SalaryRange: "₹12,000 - ₹16,000/month",
+      SkillRequired: "Agriculture Knowledge",
+    }
+  ];
 
   // Generate Google Maps URL for nearby services
   const getNearbyServicesUrl = () => {
@@ -512,6 +585,82 @@ const DashboardPage: React.FC = () => {
             </Link>
           </div>
         </div>
+
+        {/* Jobs Available in Your Area */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm border border-orange-200 p-4 sm:p-8 mb-6 sm:mb-8 mt-4">
+      <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6">
+        <div className="bg-orange-100 p-3 sm:p-4 rounded-2xl self-start">
+          <BarChart3 className="w-7 h-7 sm:w-8 sm:h-8 text-orange-600" />
+        </div>
+        <div className="flex-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+              Jobs Available in Your Area
+            </h3>
+            <div className="bg-orange-100 text-orange-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
+              Updated Daily
+            </div>
+          </div>
+          <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
+            Explore job opportunities near you. These listings are updated
+            regularly to help you find work in your locality.
+          </p>
+          <div className="grid gap-4 sm:gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-4 sm:mb-6">
+            {(showAllJobs ? jobListings : jobListings.slice(0, 4)).map((job, idx) => (
+              <div
+                key={idx}
+                className="bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-200 rounded-xl p-4 sm:p-5 hover:shadow-lg hover:shadow-orange-100/50 transition-all duration-300 transform hover:scale-105 flex flex-col justify-between min-h-[200px]"
+              >
+                <div className="mb-4">
+                  <div className="flex items-start gap-3 mb-3">
+                    <Gift className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <h4 className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
+                      {job.JobTitle}
+                    </h4>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-medium">
+                        {job.Organization}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <MapPin className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                      <span className="truncate">{job.Location}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-sm text-orange-700 font-semibold">
+                      <BarChart3 className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                      {job.SalaryRange}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">
+                        {job.SkillRequired}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <button className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md">
+                  Apply Now
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="text-center">
+            <button 
+              onClick={() => setShowAllJobs(!showAllJobs)}
+              className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg font-semibold transition-all duration-200 text-sm sm:text-base shadow-sm hover:shadow-md"
+            >
+              {showAllJobs ? 'Show Less' : 'View All Jobs'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
       </div>
     </div>
   );
