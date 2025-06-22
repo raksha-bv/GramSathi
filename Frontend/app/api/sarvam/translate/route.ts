@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { SarvamAI } from 'sarvamai';
+import { SarvamAI, SarvamAIClient } from 'sarvamai';
 
-const client = new SarvamAI({
-    api_subscription_key: process.env.SARVAM_API_KEY,
+const client = new SarvamAIClient({
+    apiSubscriptionKey: process.env.SARVAM_API_KEY,
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
