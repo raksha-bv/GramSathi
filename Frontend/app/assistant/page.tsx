@@ -121,7 +121,7 @@ const PremiumVoiceAssistant: React.FC = () => {
 
   const getChatCompletion = async (message: string): Promise<string | null> => {
     try {
-      const response = await fetch("/api/voice-chat", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -197,28 +197,24 @@ const PremiumVoiceAssistant: React.FC = () => {
               href="/"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              
               Home
             </a>
             <a
               href="/chat"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              
               Chat
             </a>
             <a
               href="/dashboard"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              
               Dashboard
             </a>
             <a
               href="/profile"
               className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-all duration-300 hover:scale-105 flex items-center gap-2"
             >
-              
               Profile
             </a>
             <a
@@ -274,7 +270,7 @@ const PremiumVoiceAssistant: React.FC = () => {
                     </div>
                   )}
 
-                  {(isProcessing && !isSpeaking) && (
+                  {isProcessing && !isSpeaking && (
                     <div className="relative">
                       <div className="w-12 h-12 border-3 border-yellow-200 rounded-full"></div>
                       <div className="absolute inset-0 w-12 h-12 border-3 border-transparent border-t-yellow-400 rounded-full animate-spin"></div>
@@ -285,7 +281,7 @@ const PremiumVoiceAssistant: React.FC = () => {
                     </div>
                   )}
 
-                  {(isSpeaking && !isProcessing) && (
+                  {isSpeaking && !isProcessing && (
                     <div className="flex items-center space-x-1">
                       {[...Array(5)].map((_, i) => (
                         <div
