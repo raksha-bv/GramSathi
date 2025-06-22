@@ -18,56 +18,60 @@ GramSathi is a modern AI-powered platform designed to assist rural communities, 
 ## Project Structure
 
 ```
-Backend/
-  AgricultureKnowlegde/
-    api/
-      gsak.py                # Flask API for agricultural knowledge
-    data/
-      ICRISAT-District Level Data.csv
-    requirements.txt         # Python dependencies
-    vercel.json              # Vercel deployment config
-    districts_output.txt
-Frontend/
-  app/
-    chat/
-      page.tsx               # Responsive AI chat interface
-    profile/
-      page.tsx               # User profile page
-    ...
-  store/
-    authStore.ts             # Authentication state management
-  tsconfig.json              # TypeScript config
+GramSathi/
+│
+├── README.md                # Project documentation and setup instructions
+├── LICENSE                  # Project license (MIT)
+│
+├── Backend/
+│   ├── AgricultureKnowlegde/
+│   │   ├── api/
+│   │   │   └── gsak.py      # Flask API for agricultural knowledge, crop advice, trends, and more
+│   │   ├── data/
+│   │   │   └── ICRISAT-District Level Data.csv  # District-level agricultural data
+│   │   ├── requirements.txt # Python dependencies for the backend API
+│   │   ├── vercel.json      # Vercel deployment configuration
+│   │   └── districts_output.txt # Output or processed data about districts
+│   │   # Gives insights based on historic data about the crops
+│   │
+│   ├── MarketAPI/
+│   │   └── ...              # Web scraping tools for AI to fetch real-time crop prices
+│   │   # Enables the AI to get real-time prices of crops in the market, helping it make informed decisions and advise people whether to sell, stock, or where to sell.
+│   │
+│   ├── Twilio/
+│   │   └── ...              # Tool for AI to trigger calls (e.g., reminders)
+│   │   # Gives the AI the power to trigger calls, which can act as reminders for users.
+│   │
+│   ├── BackendDB/
+│   │   └── ...              # Database logic and scripts
+│   │   # Used for storing the data from the frontend about user info
+│
+├── Frontend/
+│   ├── app/
+│   │   ├── chat/
+│   │   │   └── page.tsx     # Responsive AI chat interface for user queries
+│   │   ├── profile/
+│   │   │   └── page.tsx     # User profile page
+│   │   └── ...              # Other Next.js pages and routes
+│   ├── store/
+│   │   └── authStore.ts     # State management for user authentication
+│   ├── tsconfig.json        # TypeScript configuration for the frontend
+│   └── ...                  # Other config, assets, and utility files
+│
+└── ... (other root-level files, configs, or documentation)
 ```
 
 ## Getting Started
 
-### Backend (AgricultureKnowlegde)
+To run the GramSathi project locally, you will need to start each backend service individually and then run the frontend. Follow the steps below for a smooth setup:
 
-1. **Create a virtual environment:**
-   ```sh
-   python -m venv venv
-   ```
-2. **Activate the environment:**
-   - Windows:
-     ```sh
-     .\venv\Scripts\activate
-     ```
-   - macOS/Linux:
-     ```sh
-     source venv/bin/activate
-     ```
-3. **Install dependencies:**
-   ```sh
-   pip install -r requirements.txt
-   ```
-4. **Run the API locally:**
-   ```sh
-   cd Backend/AgricultureKnowlegde/api
-   python gsak.py
-   ```
-   The API will be available at `http://localhost:5000`.
+### Running Each Backend Service
 
-### Frontend (Next.js)
+Each backend module (AgricultureKnowlegde, MarketAPI, Twilio, BackendDB) is a separate service. Navigate into each directory under `Backend/` and follow the instructions provided in the respective `README.md` file to install dependencies and run the server for that service.
+
+> **Note:** Each backend directory contains its own `README.md` with detailed setup and run instructions. Please refer to those files for the most accurate and up-to-date steps for each service.
+
+### Frontend Setup (Next.js)
 
 1. **Install dependencies:**
    ```sh
@@ -79,6 +83,8 @@ Frontend/
    npm run dev
    ```
    The app will be available at `http://localhost:3000`.
+
+You can now test and use the full GramSathi platform locally. Make sure all backend services are running before using the frontend for complete functionality.
 
 ## Deployment
 
